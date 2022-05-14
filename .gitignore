@@ -2,3 +2,7 @@
 Icon
 Icon?
 ![iI]con[_a-zA-Z0-9]
+*.nc
+*.xlsx
+*.tex
+ZZZZ*

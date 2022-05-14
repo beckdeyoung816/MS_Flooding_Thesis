@@ -1,0 +1,4 @@
+2022-05-14 20:49:56,562 - ML_stormsurges_loop_2-0 -INFO - File logging to logger/ML_stormsurges_loop_2-0_logfile_Sat_May_14_20_49_56_2022.log
+2022-05-14 20:49:59,731 - ML_stormsurges_loop_2-0 -INFO - done preparing data for cuxhaven-cuxhaven-germany-bsh: 3.1676690578460693 sec
+2022-05-14 20:52:34,898 - ML_stormsurges_loop_2-0 -INFO - 0: LSTM - cuxhaven-cuxhaven-germany-bsh - 2.58 min
+2022-05-14 20:52:34,899 - ML_stormsurges_loop_2-0 -INFO - 0: Done - cuxhaven-cuxhaven-germany-bsh - 2.64 min

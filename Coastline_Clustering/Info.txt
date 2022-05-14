@@ -1,0 +1,6 @@
+ID: 			identification number for the cluster
+centroid_Obs: 		location (lon,lat) for the reference tide gauge of the ID cluster
+cluster_Obs: 		locations (lon,lat) for all the points within the ID cluster
+color: 			color used to display the ID cluster in Figure 1
+centroid_Model: 	same as in centroid_Obs but using model data
+cluster_Model:  	same as in cluster_Obs but using model data
