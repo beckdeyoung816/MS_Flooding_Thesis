@@ -12,6 +12,7 @@ from CHNN import ANN
 from CHNN import to_learning
 from CHNN import performance
 from CHNN import model_run
+from CHNN import model_run_Beck
 
 # parameters and variables
 station = 'cuxhaven-cuxhaven-germany-bsh'  # 'Cuxhaven' 'Hoek van Holland', Puerto Armuelles
@@ -44,17 +45,17 @@ frac_ensemble = 0.5
 
 loop = 2
 
-# logger, ch = model_run_Beck.set_logger(loop, n_ncells)
-# model_run_Beck.ensemble(station, variables, ML, tt_value, input_dir, resample, resample_method, scaler,
-#                    batch, n_layers, neurons, filters, dropout, drop_value, activation, optimizer,
-#                    batch_normalization, loss, epochs, loop=loop, n_ncells=n_ncells, l1=l1, l2=l2,
-#                    frac_ens=frac_ensemble, logger=logger, verbose=0, validation='select')
-
-
-logger, ch = model_run.set_logger(loop, n_ncells)
-model_run.ensemble(station, variables, ML, tt_value, input_dir, resample, resample_method, scaler,
+logger, ch = model_run_Beck.set_logger(loop, n_ncells)
+model_run_Beck.ensemble(station, variables, ML, tt_value, input_dir, resample, resample_method, scaler,
                    batch, n_layers, neurons, filters, dropout, drop_value, activation, optimizer,
                    batch_normalization, loss, epochs, loop=loop, n_ncells=n_ncells, l1=l1, l2=l2,
-                   frac_ens=frac_ensemble, logger=logger, verbose=0)
+                   frac_ens=frac_ensemble, logger=logger, verbose=0, validation='select')
 
-sys.exit(0)
+
+# logger, ch = model_run.set_logger(loop, n_ncells)
+# model_run.ensemble(station, variables, ML, tt_value, input_dir, resample, resample_method, scaler,
+#                    batch, n_layers, neurons, filters, dropout, drop_value, activation, optimizer,
+#                    batch_normalization, loss, epochs, loop=loop, n_ncells=n_ncells, l1=l1, l2=l2,
+#                    frac_ens=frac_ensemble, logger=logger, verbose=0)
+
+# sys.exit(0)

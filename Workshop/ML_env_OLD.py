@@ -32,7 +32,7 @@ optimizer = 'adam'  # SGD(lr=0.01, momentum=0.9), 'adam'
 dropout = True
 drop_value = 0.2
 l1, l2 = 0, 0.01
-ML = 'LSTM'  # 'LSTM', 'CNN', 'ConvLSTM', 'ANN', 'ALL'
+ML = 'ANN'  # 'LSTM', 'CNN', 'ConvLSTM', 'ANN', 'ALL'
 model_dir = os.path.join(os.getcwd(), 'Models')
 name_model = '{}_surge_ERA5'.format(ML)
 input_dir = 'Input_nc'
