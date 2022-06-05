@@ -8,6 +8,7 @@ import os
 import sys
 
 print(os.getcwd())
+os.chdir('/Users/beck/My Drive/VU/Thesis/Scripts/Workshop/')
 from CHNN import ANN
 from CHNN import to_learning
 from CHNN import performance
