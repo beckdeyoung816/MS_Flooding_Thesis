@@ -1,4 +1,0 @@
-2021-11-03 13:40:19,332 - ML_stormsurges_loop_2-0 -INFO - File logging to logger\ML_stormsurges_loop_2-0_logfile_Wed_Nov__3_13_40_19_2021.log
-2021-11-03 13:40:20,351 - ML_stormsurges_loop_2-0 -INFO - done preparing data for cuxhaven-cuxhaven-germany-bsh: 1.0145437717437744 sec
-2021-11-03 13:41:16,399 - ML_stormsurges_loop_2-0 -INFO - 0: LSTM - cuxhaven-cuxhaven-germany-bsh - 0.93 min
-2021-11-03 13:41:16,402 - ML_stormsurges_loop_2-0 -INFO - 0: Done - cuxhaven-cuxhaven-germany-bsh - 0.95 min
