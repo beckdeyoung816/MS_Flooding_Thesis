@@ -507,6 +507,9 @@ def prepare_station(station, variables, ML, input_dir, resample, resample_method
     df, lat_list, lon_list = spatial_to_column(df, ds, variables, selected_dates, n_ncells)
     # print('df to spatial done')    
 
+    # Drop missing values
+    df.dropna(inplace=True)
+    
     # resample or rolling mean
     df, step = resample_rolling(df, lat_list, lon_list, variables, resample, resample_method, make_univariate)
     # df = df[df['residual'].notna()].copy()

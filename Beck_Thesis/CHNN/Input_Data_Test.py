@@ -92,7 +92,7 @@ NaN_threshold=0
 station = 'cuxhaven-cuxhaven-germany-bsh'  # 'Cuxhaven' 'Hoek van Holland', Puerto Armuelles
 resample = 'hourly' # 'hourly' 'daily'
 resample_method = 'rolling_mean'  # 'max' 'res_max' 'rolling_mean' ## res_max for daily and rolling_mean for hourly
-variables = ['msl', 'grad', 'u10', 'v10', 'rho']  # 'grad', 'rho', 'phi', 'u10', 'v10', 'uquad', 'vquad'
+variables = ['msl', 'grad', 'u10', 'v10', 'rho', 'SST']  # 'grad', 'rho', 'phi', 'u10', 'v10', 'uquad', 'vquad'
 tt_value = 0.67  # train-test value
 scaler_type = 'std_normal'  # std_normal, MinMax
 n_ncells = 0
@@ -111,7 +111,7 @@ l1, l2 = 0, 0.01
 ML = 'ANN'  # 'LSTM', 'CNN', 'ConvLSTM', 'ANN', 'ALL', 'LSTM_TCN'
 model_dir = os.path.join(os.getcwd(), 'Models')
 name_model = '{}_surge_ERA5'.format(ML)
-input_dir = 'Input_nc'
+input_dir = 'Input_nc_sst'
 output_dir = 'ML_model'
 figures_dir = 'Figures'
 year = 'last'
@@ -309,12 +309,11 @@ plot_res(ann_model, ann_test_X, ann_test_y)
 plt.plot(ann_history.history['val_loss'])
 
 # %%
-lstm_test_X, lstm_test_y, lstm_train_X, lstm_train_y, lstm_val_X, lstm_val_y, lstm_n_train, lstm_result_all, lstm_sherpa_output = get_input_data(station, variables, 'LSTM', input_dir, resample, resample_method, batch,
+lstm_test_X, lstm_test_y, lstm_train_X, lstm_train_y, lstm_val_X, lstm_val_y, lstm_n_train, lstm_result_all, lstm_sherpa_output, df = get_input_data(station, variables, 'LSTM', input_dir, resample, resample_method, batch,
                                                                                                                                         scaler_type, year, n_ncells, 
                                                                                                                                         mask_val, logger)
 input_shape = (lstm_train_X.shape[1], lstm_train_X.shape[2])
 # %%
-# loss_fun = frechet_loss
 
 lstm_model = Sequential()
 lstm_model.add(layers.LSTM(48, input_shape=input_shape, activation='relu', return_sequences=True))
@@ -323,11 +322,11 @@ lstm_model.add(layers.LSTM(24, activation='relu', return_sequences=False))
 lstm_model.add(layers.Dropout(.2))
 lstm_model.add(layers.Dense(10, activation='relu'))
 # model.add(layers.Dense(5, activation='tanh'))
-lstm_model.add(layers.Dense(1, activation = 'sigmoid'))
+lstm_model.add(layers.Dense(1))
 
 # %%
 lstm_model.compile(optimizer='adam', loss=loss_fun, metrics=['mae', 'mse',])
-lstm_history = lstm_model.fit(lstm_train_X, lstm_train_y, epochs=50, batch_size=2400,
+lstm_history = lstm_model.fit(lstm_train_X, lstm_train_y, epochs=20, batch_size=2400,
                          #workers=3, use_multiprocessing=True,
                          validation_data=(lstm_val_X, lstm_val_y),
                                 callbacks = [earlyStoppingMonitor], shuffle=False)
