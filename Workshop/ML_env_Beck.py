@@ -53,12 +53,3 @@ mrB.ensemble(station, variables, ML, tt_value, input_dir, resample, resample_met
                    batch, n_layers, neurons, filters, dropout, drop_value, activation, optimizer,
                    batch_normalization, loss, epochs, loop=loop, n_ncells=n_ncells, l1=l1, l2=l2,
                    frac_ens=frac_ensemble, logger=logger, verbose=0, validation='select')
-
-
-# logger, ch = model_run.set_logger(loop, n_ncells)
-# model_run.ensemble(station, variables, ML, tt_value, input_dir, resample, resample_method, scaler,
-#                    batch, n_layers, neurons, filters, dropout, drop_value, activation, optimizer,
-#                    batch_normalization, loss, epochs, loop=loop, n_ncells=n_ncells, l1=l1, l2=l2,
-#                    frac_ens=frac_ensemble, logger=logger, verbose=0)
-
-# sys.exit(0)
