@@ -30,7 +30,7 @@ import tensorflow as tf
 tf.compat.v1.enable_eager_execution()
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-os.chdir('/Users/beck/My Drive/VU/Thesis/Scripts/Workshop/')
+os.chdir('/Users/beck/My Drive/VU/Thesis/Scripts/Beck_Thesis/')
 
 
 # %%
@@ -90,9 +90,10 @@ hyper_opt=False
 NaN_threshold=0
 
 station = 'cuxhaven-cuxhaven-germany-bsh'  # 'Cuxhaven' 'Hoek van Holland', Puerto Armuelles
+# station = 'harvest_oil_p.,ca-594a-usa-uhslc'
 resample = 'hourly' # 'hourly' 'daily'
 resample_method = 'rolling_mean'  # 'max' 'res_max' 'rolling_mean' ## res_max for daily and rolling_mean for hourly
-variables = ['msl', 'grad', 'u10', 'v10', 'rho', 'SST']  # 'grad', 'rho', 'phi', 'u10', 'v10', 'uquad', 'vquad'
+variables = ['msl', 'grad', 'u10', 'v10', 'rho']  # 'grad', 'rho', 'phi', 'u10', 'v10', 'uquad', 'vquad'
 tt_value = 0.67  # train-test value
 scaler_type = 'std_normal'  # std_normal, MinMax
 n_ncells = 0
@@ -111,7 +112,7 @@ l1, l2 = 0, 0.01
 ML = 'ANN'  # 'LSTM', 'CNN', 'ConvLSTM', 'ANN', 'ALL', 'LSTM_TCN'
 model_dir = os.path.join(os.getcwd(), 'Models')
 name_model = '{}_surge_ERA5'.format(ML)
-input_dir = 'Input_nc_sst'
+input_dir = 'Input_nc'
 output_dir = 'ML_model'
 figures_dir = 'Figures'
 year = 'last'
@@ -279,8 +280,7 @@ def plot_res(model, test_X, test_y):
 
 # %%
 ann_test_X, ann_test_y, ann_train_X, ann_train_y, ann_val_X, ann_val_y, ann_n_train, ann_result_all, ann_sherpa_output, df = get_input_data(station, variables, 'ANN', input_dir, resample, resample_method, batch,
-                                                                                                                                        scaler_type, year, n_ncells, 
-                                                                                                                                       mask_val, logger)
+                                                                                                                                        scaler_type, year, n_ncells, mask_val, logger)
 # %%
 loss_fun = gumbel_loss_hyper(tf.Variable([1.1]))
 # loss_fun = frechet_loss_hyper(alpha=tf.Variable([13.0]), s=tf.Variable([1.7]))
@@ -307,6 +307,10 @@ ann_history = ann_model.fit(ann_train_X, ann_train_y, epochs=20, batch_size=2400
 plot_res(ann_model, ann_test_X, ann_test_y)
 
 plt.plot(ann_history.history['val_loss'])
+
+# %%
+ann_model.fit_generator()
+
 
 # %%
 lstm_test_X, lstm_test_y, lstm_train_X, lstm_train_y, lstm_val_X, lstm_val_y, lstm_n_train, lstm_result_all, lstm_sherpa_output, df = get_input_data(station, variables, 'LSTM', input_dir, resample, resample_method, batch,
@@ -579,4 +583,54 @@ y_true = tf.constant(0.)
 val1 = gumbel_loss_hyper2(1.1, y_true,y_pred)
 
 plt.plot(y_pred, val1)
+# %%
+# %%
+coast_stations = ['calais-calais-france-refmar',         
+                'denhelder-hel-nl-rws',
+                'aberdeen-p038-uk-bodc',
+                'cuxhaven-cuxhaven-germany-bsh',
+                'esbjerg-130121-denmark-dmi',
+                'brest-brest-france-refmar',
+                'delfzijl-del-nl-rws',
+                'hoekvanholla-hvh-nl-rws']
+
+
+act = 'relu'
+
+ann_model = Sequential()
+ann_model.add(layers.Dense(15, activation=act, input_dim=len(variables), kernel_regularizer=keras.regularizers.l1_l2(l1=l1, l2=l2)))
+ann_model.add(layers.Dense(10, activation=act, kernel_regularizer=keras.regularizers.l1_l2(l1=l1, l2=l2)))
+ann_model.add(layers.Dense(1))
+
+ann_model.compile(optimizer=keras.optimizers.Adam(clipnorm=1), 
+                  loss=loss_fun, 
+                  metrics=['mae', 'mse'])
+
+# %%
+ann_history = {}
+ann_trains_X = {}
+ann_tests_X = {}
+ann_trains_y = {}
+ann_tests_y = {}
+
+
+for station in coast_stations[0:3]:
+    ann_test_X, ann_test_y, ann_train_X, ann_train_y, ann_val_X, ann_val_y, ann_n_train, ann_result_all, ann_sherpa_output, df = get_input_data(station, variables, 'ANN', input_dir, resample, resample_method, batch,
+                                                                                                                                        scaler_type, year, n_ncells, mask_val, logger)
+    
+    ann_history[station] = ann_model.fit(ann_train_X, ann_train_y, epochs=20, batch_size=2400, validation_data=(ann_val_X, ann_val_y),
+                            callbacks = None, shuffle=False)
+    
+    ann_trains_X[station] = ann_train_X
+    ann_tests_y[station] = ann_test_y
+    ann_trains_y[station] = ann_train_y
+    ann_tests_X[station] = ann_test_X
+    
+# %%
+for station in coast_stations[0:3]:
+    plot_res(ann_model, ann_tests_X[station], ann_tests_y[station])
+
+    plt.plot(ann_history[station].history['val_loss'], label = station)
+    plt.legend()
+    plt.show()
 # %%

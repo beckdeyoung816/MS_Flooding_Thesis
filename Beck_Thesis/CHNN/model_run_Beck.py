@@ -99,7 +99,7 @@ def get_input_data(station, variables, ML, input_dir, resample, resample_method,
         if not logger:
             print(f'\nEnsemble loop: {i + 1}\n')
         tf.keras.backend.clear_session()
-        name_model = f'{ML}_ensemble_{i + 1}_{loss}'
+        name_model = f'{ML}_{loss}_ensemble_{i + 1}'
 
         # shuffle df
         reframed_ensemble = reframed.copy()
@@ -137,10 +137,10 @@ def ensemble(station, variables, ML, tt_value, input_dir, resample, resample_met
         ML_list = [ML]
     print('ML_list is:', ML_list)
     
-    test_X, test_y, train_X, train_y, val_X, val_y, n_train, result_all, sherpa_output = get_input_data(station, variables, 'ANN', input_dir, resample, resample_method, batch,
-                                                                                                                                        scaler_type, year, n_ncells, 
-                                                                                                                                        mask_val, loop,
-                                                                                                                                        tt_value, frac_ens, NaN_threshold, loss,logger)
+    # test_X, test_y, train_X, train_y, val_X, val_y, n_train, result_all, sherpa_output = get_input_data(station, variables, 'ANN', input_dir, resample, resample_method, batch,
+    #                                                                                                                                     scaler_type, year, n_ncells, 
+    #                                                                                                                                     mask_val, loop,
+    #                                                                                                                                     tt_value, frac_ens, NaN_threshold, loss,logger)
     
     
     df, lat_list, lon_list, direction, scaler, reframed, test_dates, i_test_dates = to_learning.prepare_station(station, variables, ML, input_dir, resample, resample_method,
@@ -187,7 +187,7 @@ def ensemble(station, variables, ML, tt_value, input_dir, resample, resample_met
             if not logger:
                 print(f'\nEnsemble loop: {i + 1}\n')
             tf.keras.backend.clear_session()
-            name_model = f'{ML}_ensemble_{i + 1}_{loss}'
+            name_model = f'{ML}_{loss}_ensemble_{i + 1}'
 
             # shuffle df
             reframed_ensemble = reframed.copy()
@@ -229,10 +229,7 @@ def ensemble(station, variables, ML, tt_value, input_dir, resample, resample_met
             inv_yhat, inv_y = model.predict(test_year.replace(to_replace=mask_val, value=np.nan), scaler, 0)
 
             print('DONE MODELING')
-            
-            # plt.plot(inv_yhat, label='prediction', color = 'r')
-            # plt.plot(inv_y, label='true', color = 'g')
-            # plt.show()
+    
             
             # plot results
             df_all = performance.store_result(inv_yhat, inv_y)
@@ -282,10 +279,10 @@ def post_process_ensemble_handler():
     station_list = df_prescreening['station'][df_prescreening['available'] == True].values
 
     for station in station_list:
-        station = 'cuxhaven-cuxhaven-germany-bsh'
+        # station = 'cuxhaven-cuxhaven-germany-bsh'
         print(f'Start ML ensemble run for station: {station}')
         post_process(station, ML_sel, fn_ens, fn_out, sel_metric)
-        sys.exit(0)
+        sys.exit(0) 
 
 def post_process(station, ML_sel, fn_ens, fn_out, sel_metric):
     
@@ -423,15 +420,3 @@ def clim_mean():
         df_global.loc[station, 'CM_CRPS'] = performance.crps_metrics(df_nn.dropna(axis=0, how='any'))
 
     df_global.to_csv(os.path.join('Results', 'Global_performance_metrics_CM.csv')) 
-
-
-
-
-
-
-
-
-
-
-
-

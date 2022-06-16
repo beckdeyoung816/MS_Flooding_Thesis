@@ -85,7 +85,7 @@ sst = (ee.ImageCollection('NOAA/CDR/SST_PATHFINDER/V53')
             .select('sea_surface_temperature'))
 # %%
 stations = pd.read_excel('Coast_orientation/stations.xlsx', sheet_name='Selected Stations')
-
+# %%
 for index, station in stations.iterrows():
     print(f'Station: {station["Station"]}')
     
@@ -117,8 +117,23 @@ for index, station in stations.iterrows():
     # sst_ds.to_netcdf('Input_nc_sst/' + station_name + '.nc')
 # %%
 # Testing for Cuxhaven
+station = 'cuxhaven-cuxhaven-germany-bsh'
 stations = pd.read_excel('Coast_orientation/stations.xlsx')
 
-station = stations[stations['Station'] == 'cuxhaven-cuxhaven-germany-bsh'].reset_index(drop=True).loc[0,:]
-
+station = stations[stations['Station'] == station].reset_index(drop=True).loc[0,:]
+# %%
 add_sst_to_ds(station['Station'], station['Lon'], station['Lat'])
+
+# %%
+des_stations = ['calais-calais-france-refmar',         
+                'denhelder-hel-nl-rws',
+                'aberdeen-p038-uk-bodc',
+                'cuxhaven-cuxhaven-germany-bsh',
+                'esbjerg-130121-denmark-dmi',
+                'brest-brest-france-refmar',
+                'delfzijl-del-nl-rws',
+                'hoekvanholla-hvh-nl-rws']
+
+des_stations2 = stations[stations['Station'].isin(des_stations)]
+
+# %%

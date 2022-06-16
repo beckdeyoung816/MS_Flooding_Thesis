@@ -7,7 +7,7 @@ Timothy Tiggeloven and Anaïs Couasnon
 import os
 import sys
 
-os.chdir('./Workshop/')
+# os.chdir('./Beck_Thesis/')
 from CHNN import model_run_Beck as mrB
 
 
@@ -22,9 +22,9 @@ loss = sys.argv[3]
 
 resample = 'hourly' # 'hourly' 'daily'
 resample_method = 'rolling_mean'  # 'max' 'res_max' 'rolling_mean' ## res_max for daily and rolling_mean for hourly
-variables = ['msl', 'grad', 'u10', 'v10', 'rho']  # 'grad', 'rho', 'phi', 'u10', 'v10', 'uquad', 'vquad'
+variables = ['msl', 'grad', 'u10', 'v10', 'rho', 'sst']  # 'grad', 'rho', 'phi', 'u10', 'v10', 'uquad', 'vquad'
 tt_value = 0.67  # train-test value
-scaler = 'MinMax'  # std_normal, MinMax
+scaler = 'std_normal'  # std_normal, MinMax
 n_ncells = 0
 epochs = 25
 batch = 100
@@ -40,7 +40,7 @@ l1, l2 = 0, 0.01
 
 model_dir = os.path.join(os.getcwd(), 'Models')
 name_model = '{}_surge_ERA5_test'.format(ML)
-input_dir = 'Input_nc'
+input_dir = 'Input_nc_sst'
 output_dir = 'ML_model'
 figures_dir = 'Figures'
 year = 'last'
