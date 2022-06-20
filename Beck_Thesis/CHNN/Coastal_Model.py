@@ -76,6 +76,7 @@ class Coastal_Model():
         
         # Loss function parameters
         if loss.lower() == 'gumbel':
+            print('GUMBEL')
             self.gamma = gamma
             self.custom_loss_fn = self.gumbel_loss_hyper(gamma=gamma)
             

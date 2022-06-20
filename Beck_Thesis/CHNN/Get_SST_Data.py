@@ -13,7 +13,6 @@ import to_learning
 import os
 os.chdir('..')
 
-# %%
 ee.Initialize()
 
 def ee_array_to_df(arr, list_of_bands):

@@ -148,7 +148,7 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
             model = Coastal_Model(stations, ML, loss, n_layers, neurons, activation, dropout, drop_value,
                                       hyper_opt, validation, optimizer, epochs, batch, verbose, model_dir, filters,
                                       variables, batch_normalization, sherpa_output, logger, name_model,
-                                      alpha=None, s=None, gamma=.1, l1=l1, l2=l2, mask_val=mask_val)
+                                      alpha=None, s=None, gamma=1.1, l1=l1, l2=l2, mask_val=mask_val)
                              
             
             model.design_network()
@@ -174,12 +174,12 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
                                                                             test_on='ensemble', plot=True, save=True, loss=loss)
         
         if logger:
-            logger.info(f'{arg_count}: {ML} - {station} - {round((time.time() - start2) / 60, 2)} min')
+            logger.info(f'{arg_count}: {ML} - {coast} - {round((time.time() - start2) / 60, 2)} min')
         else:
             print(f'\ndone ensemble run for {ML}: {round((time.time() - start2) / 60, 2)} min\n')
     
     if logger:
-        logger.info(f'{arg_count}: Done - {station} - {round((time.time() - start1) / 60, 2)} min')
+        logger.info(f'{arg_count}: Done - {coast} - {round((time.time() - start1) / 60, 2)} min')
         return None
     else:
         print(f'\ndone ensemble runs for {ML_list}: {round((time.time() - start1) / 60, 2)} min\n')

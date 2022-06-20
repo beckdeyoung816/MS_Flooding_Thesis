@@ -23,7 +23,7 @@ import tcn
 from LSTM import LSTM
 import to_learning
 import performance
-# import model_run_Beck_Coast as mrb
+# import model_run_coast as mr
 import Coastal_Model as cm
 
 import matplotlib.pyplot as plt
@@ -670,17 +670,20 @@ plt.show()
 # %%
 coast = 'NE Atlantic Yellow'
 stations = {}
-for station in mrb.get_coast_stations(coast):
+for station in mr.get_coast_stations(coast):
     # Get input data for the station
     # This includes the train, test, and validation data, as well as the scaler and transformed data for inverse transforming
-    stations[station] = mrb.get_input_data(station, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger)
+    stations[station] = mr.get_input_data(station, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger)
                                 
 # %%
 sherpa_output = None
+verbose = 1
+loss = 'gumbel'
+ML = 'ANN'
 model = cm.Coastal_Model(stations, ML, loss, n_layers, neurons, activation, dropout, drop_value,
                                       hyper_opt, validation, optimizer, epochs, batch, verbose, model_dir, filters,
                                       variables, batch_normalization, sherpa_output, logger, name_model,
-                                      alpha=None, s=None, gamma=.1, l1=l1, l2=l2, mask_val=mask_val)
+                                      alpha=None, s=None, gamma=1.1, l1=l1, l2=l2, mask_val=mask_val)
 
 # %%
 i = 0
@@ -717,3 +720,11 @@ df_all = performance.store_result(station.inv_test_preds, station.inv_test_y)
 df_all = df_all.set_index(station.df.iloc[station.test_dates,:].index, drop = True)                                                                    
 
 station.result_all['data'][ensemble_loop] = df_all.copy()
+
+
+# %%
+for station in stations.values():
+    plt.hist(station.train_y)
+    plt.title(station.name)
+    plt.show()
+# %%

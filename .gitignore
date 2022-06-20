@@ -17,3 +17,4 @@ ZZZZ*
 **/logger
 **/__pycache__
 *.Rhistory
+**/Models

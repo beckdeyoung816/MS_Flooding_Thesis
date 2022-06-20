@@ -21,4 +21,4 @@ conda activate py39
 #     python -W ignore ML_env_Beck.py ${stations[$station]} 'ANN' 'gumbel'
 # done
 
-python -W ignore ML_env_Coast.py 'NE Atlantic Yellow' 'ANN' 'mse'
+python -W ignore ML_env_Coast.py 'NE Atlantic Yellow' 'ANN' 'Gumbel'

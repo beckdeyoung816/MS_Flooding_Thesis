@@ -80,13 +80,13 @@ def ensemble_handler(result_dict, station, neurons, epochs, batch, resample, tt_
     if save == True:
         os.makedirs(os.path.join(out_dir, 'Data'), exist_ok=True)
         
-        fn = f'{station}_{ML}_prediction.csv'       
+        fn = f'{station}_{ML}_{loss}_prediction.csv'       
         df_result.to_csv(os.path.join(out_dir, 'Data', fn))
         
-        fn = f'{station}_{ML}_training.csv'
+        fn = f'{station}_{ML}_{loss}_training.csv'
         df_train.to_csv(os.path.join(out_dir, 'Data',fn))
         
-        fn = f'{station}_{ML}_testing.csv'
+        fn = f'{station}_{ML}_{loss}_testing.csv'
         df_test.to_csv(os.path.join(out_dir, 'Data', fn))
     
     if plot == True:

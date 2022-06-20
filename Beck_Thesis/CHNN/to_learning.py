@@ -522,9 +522,9 @@ def prepare_station(station, variables, ML, input_dir, resample, resample_method
     # reframed_df = reframed.copy()
 
     if logger:
-        logger.info(f'done preparing data for {station}: {time.time()-start} sec')
+        logger.info(f'done preparing data for {station}: {time.time()-start: .2f} sec')
     else:
-        print('done preparing data: {} sec\n'.format(time.time()-start))
+        print(f'done preparing data: {time.time()-start: .2f} sec\n')
     return df, lat_list, lon_list, direction, scaler, reframed, dates, i_dates
 
 def splitting_learning(reframed, df, tt_value, ML, variables, direction, lat_list, lon_list, batch, n_train=False):

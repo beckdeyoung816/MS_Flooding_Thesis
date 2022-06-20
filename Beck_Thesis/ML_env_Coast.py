@@ -8,7 +8,7 @@ import os
 import sys
 
 # os.chdir('./Beck_Thesis/')
-from CHNN.model_run_Beck_Coast import ensemble, set_logger
+from CHNN.model_run_coast import ensemble, set_logger
 
 # parameters and variables
 coast = sys.argv[1]
@@ -41,9 +41,9 @@ drop_value = 0.2
 l1, l2 = 0, 0.01
 
 model_dir = os.path.join(os.getcwd(), 'Models')
-name_model = '{}_surge_ERA5_test'.format(ML)
+name_model = f'{coast}_{ML}_{loss}'
 input_dir = 'Input_nc_sst'
-output_dir = 'ML_model'
+output_dir = 'Models'
 figures_dir = 'Figures'
 year = 'last'
 frac_ens = 0.5
