@@ -16,3 +16,4 @@ ZZZZ*
 *.pyc
 **/logger
 **/__pycache__
+*.Rhistory
