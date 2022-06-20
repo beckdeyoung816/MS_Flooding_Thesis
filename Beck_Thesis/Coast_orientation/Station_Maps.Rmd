@@ -1,0 +1,29 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+library(readxl)
+```
+
+```{r}
+stations <- read_excel('stations.xlsx', sheet = 'Selected Stations') %>% 
+  dplyr::select(Coast, station = Station, lat = Lat, lon = Lon)
+```
+
+```{r}
+library(maps)
+```
+
+```{r}
+map("world", fill=TRUE, col="white", bg="gray", ylim=c(-60, 90), mar=c(0,0,0,0))
+```
+```{r}
+library(sf)
+
+stations_sf <- stations %>% sf::as_Spatial()
+stations %>% ggplot() + 
+  geom_sf()
+```
+

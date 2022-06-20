@@ -183,6 +183,7 @@ def ensemble(station, variables, ML, tt_value, input_dir, resample, resample_met
         result_all['data'] = dict()
         result_all['train_loss'] = dict()
         result_all['test_loss'] = dict()
+        
         for i in range(loop):
             if not logger:
                 print(f'\nEnsemble loop: {i + 1}\n')
@@ -227,9 +228,6 @@ def ensemble(station, variables, ML, tt_value, input_dir, resample, resample_met
 
             # make a prediction
             inv_yhat, inv_y = model.predict(test_year.replace(to_replace=mask_val, value=np.nan), scaler, 0)
-
-            print('DONE MODELING')
-    
             
             # plot results
             df_all = performance.store_result(inv_yhat, inv_y)

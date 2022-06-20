@@ -51,12 +51,10 @@ class relu_advanced(layers.Activation):
         super(relu_advanced, self).__init__(activation, **kwargs)
         self.__name__ = 'relu_advanced'
 
-
-class Coastal_Model(keras.layers.LSTM):
-    def __init__(self, loss, n_layers, neurons, activation, train_X, train_y, dropout, drop_value, 
-                 hyper_opt, validation, test_X, test_y,
-                 val_X, val_y, optimizer, epochs, batch, verbose, model_dir, name_model, ML, filters, 
-                 variables, batch_normalization, sherpa_output, logger,
+class Coastal_Model():
+    def __init__(self, station_inputs, ML, loss, n_layers, neurons, activation, dropout, drop_value, 
+                 hyper_opt, validation, optimizer, epochs, batch, verbose, model_dir, filters, 
+                 variables, batch_normalization, sherpa_output, logger, name_model,
                  alpha=13, s=1.7, gamma=1.1, l1=0.01, l2=0.01, mask_val=-999):
         
         # Model parameters
@@ -64,10 +62,6 @@ class Coastal_Model(keras.layers.LSTM):
         self.n_layers = n_layers
         self.neurons = neurons
         self.activ = activation
-        self.train_X = train_X
-        self.train_y = train_y
-        self.test_X = test_X
-        self.test_y = test_y
         self.drop_out = dropout
         self.drop_value = drop_value
         self.l1 = l1
@@ -81,11 +75,11 @@ class Coastal_Model(keras.layers.LSTM):
         self.verbose = verbose
         
         # Loss function parameters
-        if loss == 'Gumbel':
+        if loss.lower() == 'gumbel':
             self.gamma = gamma
             self.custom_loss_fn = self.gumbel_loss_hyper(gamma=gamma)
             
-        elif loss == 'Frechet':
+        elif loss.lower() == 'frechet':
             self.alpha = alpha
             self.s = s
             self.custom_loss_fn = self.frechet_loss()
@@ -94,9 +88,7 @@ class Coastal_Model(keras.layers.LSTM):
             
         
         # Data & Misc
-        
-        self.val_X = val_X
-        self.val_y = val_y
+        self.station_inputs = station_inputs
         self.batch_size = batch
         self.model_dir = model_dir
         self.name_model = name_model
@@ -113,7 +105,7 @@ class Coastal_Model(keras.layers.LSTM):
         """
 
         model = models.Sequential()
-        model.add(layers.Dense(self.neurons, kernel_regularizer=keras.regularizers.l1_l2(l1=self.l1, l2=self.l2), activation=self.activ, input_dim=self.train_X.shape[1]))
+        model.add(layers.Dense(self.neurons, kernel_regularizer=keras.regularizers.l1_l2(l1=self.l1, l2=self.l2), activation=self.activ, input_dim=len(self.vars)))
         for i in range(self.n_layers - 1):
             model.add(layers.Dense(self.neurons, kernel_regularizer=keras.regularizers.l1_l2(l1=self.l1, l2=self.l2), activation=self.activ))
             
@@ -127,7 +119,8 @@ class Coastal_Model(keras.layers.LSTM):
         """
         Design an LSTM model
         """
-        input_shape = (self.train_X.shape[1], self.train_X.shape[2])
+        # Time steps, num features
+        input_shape = (1, len(self.vars))
         # model = models.Sequential()
         # # model.add(layers.Masking(mask_value=mask_val, input_shape=input_shape))
         # for i in range(self.n_layers):
@@ -164,7 +157,8 @@ class Coastal_Model(keras.layers.LSTM):
         """
         Design a TCN-LSTM model
         """
-        input_shape = (self.train_X.shape[1], self.train_X.shape[2])
+        # Time steps, num features
+        input_shape = (1, len(self.vars))
         
         model = models.Sequential()
         model.add(tcn.TCN(48, input_shape=input_shape, activation='relu', return_sequences=True,
@@ -233,7 +227,7 @@ class Coastal_Model(keras.layers.LSTM):
         
         return frechet_loss_fn
     
-    def train_model(self, hyper_opt=False):
+    def train_model(self, i, hyper_opt=False):
             
         my_callbacks = [EarlyStopping(monitor='val_loss', min_delta=0, patience=3, mode="auto", restore_best_weights = 'True'),
                         ModelCheckpoint(filepath=os.path.join(self.model_dir, self.name_model), monitor='val_loss', save_best_only=True, save_weights_only=False, mode='auto', period=1)] # ProgbarLogger(count_mode="steps", stateful_metrics=None), , ModelCheckpoint(filepath=os.path.join(model_dir, name_model), monitor='loss', save_best_only=True, save_weights_only=False, mode='auto', period=1),
@@ -246,23 +240,29 @@ class Coastal_Model(keras.layers.LSTM):
             shuffle = False #'batch'
         else:
             shuffle= True
+            
         
-        # fit network
-        if self.validation == 'split':
-            self.history = self.model.fit(self.train_X, self.train_y, epochs=self.epochs, batch_size=self.batch_size, 
-                                validation_split=0.3, callbacks=my_callbacks, verbose=self.verbose, shuffle=shuffle)
-        elif self.validation == 'select':
-            self.history = self.model.fit(self.train_X, self.train_y, epochs=self.epochs, batch_size=self.batch_size,
-                                validation_data=(self.val_X, self.val_y), callbacks=my_callbacks, verbose=self.verbose, shuffle=shuffle)
-        else:
-            raise ValueError('Validation must be either "split" or "select"')
+        self.history = {}
+        
+        # Fit network sequentially on each station
+        num_stations = len(self.station_inputs)
+        for j, station in enumerate(self.station_inputs.values()):
+            print(f'\nTraining Station ({j+1} of {num_stations}): {station.name}\n')
+            # fit network
+            if self.validation == 'split':
+                self.history[station.name] = self.model.fit(station.train_X, station.train_y, epochs=self.epochs, batch_size=self.batch_size, 
+                                    validation_split=0.3, callbacks=my_callbacks, verbose=self.verbose, shuffle=shuffle)
+            elif self.validation == 'select':
+                self.history[station.name] = self.model.fit(station.train_X, station.train_y, epochs=self.epochs, batch_size=self.batch_size,
+                                    validation_data=(station.val_X, station.val_y), callbacks=my_callbacks, verbose=self.verbose, shuffle=shuffle)
+            else:
+                raise ValueError('Validation must be either "split" or "select"')
+            
+            station.result_all['train_loss'][i] = self.history[station.name].history['loss']
+            station.result_all['test_loss'][i] = self.history[station.name].history['val_loss']
 
         self.model.save(os.path.join(self.model_dir, self.name_model), include_optimizer=True, overwrite=True)
 
-        # Store loss values
-        self.train_loss = self.history.history['loss']
-        self.test_loss = self.history.history['val_loss']
-        del(self.history)
     
     def hyper_opt(self):
         # setup sherpa object
@@ -312,24 +312,11 @@ class Coastal_Model(keras.layers.LSTM):
         study.save(self.sherpa_output)
         # sherpa.Study.load_dashboard(".")
         # ssh -L 8000:localhost:8880 timothyt@cartesius.surfsara.nl
-        # model.compile(optimizer='adam',
-        #           loss=gumbel_loss(layer), # Call the loss function with the selected layer))
         
-        
-        
-    def predict(self, reframed_df, scaler, n_train_final):
-        df = reframed_df[n_train_final:].copy()
-
-        # make a prediction
-        yhat = self.model.predict(self.test_X)
-
-        # invert scaling for observed surge
-        inv_y = scaler.inverse_transform(df.values)[:,-1]
-
-        # invert scaling for modelled surge
-        df.loc[:,'values(t)'] = yhat
-        inv_yhat = scaler.inverse_transform(df.values)[:,-1]
-
-        return inv_yhat, inv_y
+    def predict(self, ensemble_loop):
+        # Predict for each station
+        for station in self.station_inputs.values():
+            print(f'\nPredicting station: {station.name}\n')
+            station.predict(self.model, ensemble_loop, self.mask_val)
 
 

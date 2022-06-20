@@ -23,6 +23,9 @@ import tcn
 from LSTM import LSTM
 import to_learning
 import performance
+# import model_run_Beck_Coast as mrb
+import Coastal_Model as cm
+
 import matplotlib.pyplot as plt
 from keras.callbacks import EarlyStopping
 import keras.backend as K
@@ -93,11 +96,11 @@ station = 'cuxhaven-cuxhaven-germany-bsh'  # 'Cuxhaven' 'Hoek van Holland', Puer
 # station = 'harvest_oil_p.,ca-594a-usa-uhslc'
 resample = 'hourly' # 'hourly' 'daily'
 resample_method = 'rolling_mean'  # 'max' 'res_max' 'rolling_mean' ## res_max for daily and rolling_mean for hourly
-variables = ['msl', 'grad', 'u10', 'v10', 'rho']  # 'grad', 'rho', 'phi', 'u10', 'v10', 'uquad', 'vquad'
+variables = ['msl', 'grad', 'u10', 'v10', 'rho', 'sst']  # 'grad', 'rho', 'phi', 'u10', 'v10', 'uquad', 'vquad'
 tt_value = 0.67  # train-test value
 scaler_type = 'std_normal'  # std_normal, MinMax
 n_ncells = 0
-epochs = 50
+epochs = 25
 batch = 100
 batch_normalization = False
 neurons = 48
@@ -109,10 +112,11 @@ optimizer = tf.keras.optimizers.Adam(clipnorm=1) # 'adam'  # SGD(lr=0.01, moment
 dropout = True
 drop_value = 0.2
 l1, l2 = 0, 0.01
+
 ML = 'ANN'  # 'LSTM', 'CNN', 'ConvLSTM', 'ANN', 'ALL', 'LSTM_TCN'
 model_dir = os.path.join(os.getcwd(), 'Models')
 name_model = '{}_surge_ERA5'.format(ML)
-input_dir = 'Input_nc'
+input_dir = 'Input_nc_sst'
 output_dir = 'ML_model'
 figures_dir = 'Figures'
 year = 'last'
@@ -277,6 +281,8 @@ def plot_res(model, test_X, test_y):
     plt.plot(pred, color='red', alpha=.5)
     plt.legend(['True', 'Pred'])
     plt.show()
+    
+    return pred
 
 # %%
 ann_test_X, ann_test_y, ann_train_X, ann_train_y, ann_val_X, ann_val_y, ann_n_train, ann_result_all, ann_sherpa_output, df = get_input_data(station, variables, 'ANN', input_dir, resample, resample_method, batch,
@@ -596,7 +602,7 @@ coast_stations = ['calais-calais-france-refmar',
 
 
 act = 'relu'
-
+loss_fun = 'mse'
 ann_model = Sequential()
 ann_model.add(layers.Dense(15, activation=act, input_dim=len(variables), kernel_regularizer=keras.regularizers.l1_l2(l1=l1, l2=l2)))
 ann_model.add(layers.Dense(10, activation=act, kernel_regularizer=keras.regularizers.l1_l2(l1=l1, l2=l2)))
@@ -613,8 +619,9 @@ ann_tests_X = {}
 ann_trains_y = {}
 ann_tests_y = {}
 
+num_stations = 4
 
-for station in coast_stations[0:3]:
+for station in coast_stations[0:num_stations]:
     ann_test_X, ann_test_y, ann_train_X, ann_train_y, ann_val_X, ann_val_y, ann_n_train, ann_result_all, ann_sherpa_output, df = get_input_data(station, variables, 'ANN', input_dir, resample, resample_method, batch,
                                                                                                                                         scaler_type, year, n_ncells, mask_val, logger)
     
@@ -627,10 +634,86 @@ for station in coast_stations[0:3]:
     ann_tests_X[station] = ann_test_X
     
 # %%
-for station in coast_stations[0:3]:
-    plot_res(ann_model, ann_tests_X[station], ann_tests_y[station])
-
+ann_preds = {}
+mses = np.array([])
+for station in coast_stations[0:num_stations]:
+    ann_preds[station] = plot_res(ann_model, ann_tests_X[station], ann_tests_y[station])
+    mses = np.append(mses, ann_model.evaluate(ann_tests_X[station], ann_tests_y[station])[2])
     plt.plot(ann_history[station].history['val_loss'], label = station)
     plt.legend()
     plt.show()
 # %%
+mses.mean()
+# %%
+ann_preds = {}
+mses = np.array([])
+
+fig, axes = plt.subplots(2, num_stations // 2 + (num_stations % 2), figsize=(12,8))
+axes = axes.ravel()
+
+for i, station in enumerate(coast_stations[0:num_stations]):
+    pred = ann_model.predict(ann_tests_X[station])
+    pred = [x[0] for x in pred]
+    mse = ann_model.evaluate(ann_tests_X[station], ann_tests_y[station])[2]
+    mses = np.append(mses, mse)
+    
+    axes[i-1].plot(ann_tests_y[station], color='blue', alpha=.5)
+    axes[i-1].plot(pred, color='red', alpha=.5)
+    axes[i-1].set_title(f'{station} ; RMSE = {np.sqrt(mse):.2f}')
+    plt.legend(['True', 'Pred'])
+    
+plt.show()
+# %%
+# station = mrb.get_input_data(coast_stations[0], variables, ML, input_dir, resample, resample_method, batch,
+#                    scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold,
+#                    logger)
+# %%
+coast = 'NE Atlantic Yellow'
+stations = {}
+for station in mrb.get_coast_stations(coast):
+    # Get input data for the station
+    # This includes the train, test, and validation data, as well as the scaler and transformed data for inverse transforming
+    stations[station] = mrb.get_input_data(station, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger)
+                                
+# %%
+sherpa_output = None
+model = cm.Coastal_Model(stations, ML, loss, n_layers, neurons, activation, dropout, drop_value,
+                                      hyper_opt, validation, optimizer, epochs, batch, verbose, model_dir, filters,
+                                      variables, batch_normalization, sherpa_output, logger, name_model,
+                                      alpha=None, s=None, gamma=.1, l1=l1, l2=l2, mask_val=mask_val)
+
+# %%
+i = 0
+model.design_network()
+model.compile()
+model.train_model(i=i)
+# %%
+station = model.station_inputs['calais-calais-france-refmar']
+# for station in model.station_inputs.values():
+#             station.predict(self.model, ensemble_loop, self.mask_val)
+# %%
+temp_df = station.test_year.replace(to_replace=mask_val, value=np.nan)[station.n_train_final:].copy()
+
+# %%
+# make a prediction
+station.test_preds = model.model.predict(station.test_X)
+
+# %%
+
+# invert scaling for observed surge
+station.inv_test_y = station.scaler.inverse_transform(temp_df.values)[:,-1]
+
+# %%
+# invert scaling for modelled surge
+temp_df.loc[:,'values(t)'] = station.test_preds
+station.inv_test_preds = station.scaler.inverse_transform(temp_df.values)[:,-1]
+
+# %%
+station.rmse = np.sqrt(mean_squared_error(station.inv_test_y, station.inv_test_preds))
+
+# %%
+# Store Results
+df_all = performance.store_result(station.inv_test_preds, station.inv_test_y)
+df_all = df_all.set_index(station.df.iloc[station.test_dates,:].index, drop = True)                                                                    
+
+station.result_all['data'][ensemble_loop] = df_all.copy()

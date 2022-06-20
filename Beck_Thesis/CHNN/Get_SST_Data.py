@@ -90,31 +90,7 @@ for index, station in stations.iterrows():
     print(f'Station: {station["Station"]}')
     
     add_sst_to_ds(station['Station'], station['Lon'], station['Lat'])
-    
-    # df_ds, ds, dir = to_learning.load_file(station_name, input_dir = 'Input_nc')
-    
-    # start = np.min(np.array(ds.time))
-    # start = pd.to_datetime(str(start)).strftime('%Y-%m-%d')
-    # end = np.max(np.array(ds.time))
-    # end = pd.to_datetime(str(end)).strftime('%Y-%m-%d')
-    
-    # latitude, longitude = station['Lat'], station['Lon']
-    
-    # station_sst = (sst.filter(ee.Filter.date(start, end))
-    #        .getRegion(ee.Geometry.Point(longitude, latitude), 30)
-    #        .getInfo())
-    
-    # sst_df = ee_array_to_df(station_sst, ['sea_surface_temperature'])
-    # sst_df['sst'] =  kelvin_to_celsius(sst_df['sea_surface_temperature'])
-    # sst_df = sst_df[['datetime', 'sst']]
-        
-    # sst_df['time'] = pd.to_datetime(sst_df['datetime'])
-    # sst_ds = (sst_df.set_index('time')
-    #         .resample('H').mean().interpolate()
-    #         .to_xarray())
-    # sst_ds = xr.merge([ds, sst_ds])
-    
-    # sst_ds.to_netcdf('Input_nc_sst/' + station_name + '.nc')
+
 # %%
 # Testing for Cuxhaven
 station = 'cuxhaven-cuxhaven-germany-bsh'

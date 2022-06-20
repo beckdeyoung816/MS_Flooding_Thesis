@@ -78,14 +78,16 @@ def ensemble_handler(result_dict, station, neurons, epochs, batch, resample, tt_
     df_test['min'] = df_test.min(axis = 1)
     
     if save == True:
+        os.makedirs(os.path.join(out_dir, 'Data'), exist_ok=True)
+        
         fn = f'{station}_{ML}_prediction.csv'       
-        df_result.to_csv(os.path.join(out_dir, fn))
+        df_result.to_csv(os.path.join(out_dir, 'Data', fn))
         
         fn = f'{station}_{ML}_training.csv'
-        df_train.to_csv(os.path.join(out_dir, fn))
+        df_train.to_csv(os.path.join(out_dir, 'Data',fn))
         
         fn = f'{station}_{ML}_testing.csv'
-        df_test.to_csv(os.path.join(out_dir, fn))
+        df_test.to_csv(os.path.join(out_dir, 'Data', fn))
     
     if plot == True:
         plot_ensemble_performance(df_result, df_train, df_test, station, neurons, epochs, batch, resample,
@@ -118,7 +120,8 @@ def plot_ensemble_performance(df, train_loss, test_loss, station, neurons, epoch
     fig.suptitle(station, fontsize=32)
     plt.tight_layout(rect=[0, 0, 1, 0.95]) # [left, bottom, right, top]
     fn = f'{station}_{ML}_{loss}.png'
-    plt.savefig(os.path.join(os.path.split(out_dir)[0], fn), dpi=100)
+    os.makedirs(os.path.join(os.path.split(out_dir)[0], ML, 'Figures'), exist_ok=True)
+    plt.savefig(os.path.join(os.path.split(out_dir)[0], ML, 'Figures', fn), dpi=100)
     plt.close()
 
 def plot_ensemble_metrics(df_test, ax):
