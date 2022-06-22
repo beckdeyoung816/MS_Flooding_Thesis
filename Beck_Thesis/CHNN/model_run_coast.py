@@ -121,6 +121,7 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
     for ML in ML_list:
         if not logger:
             print(f'\nStart ensemble run for {ML}\n')
+            print('\n\n************************************************************************************\n\n')
         start2 = time.time()
 
         # create model output directory

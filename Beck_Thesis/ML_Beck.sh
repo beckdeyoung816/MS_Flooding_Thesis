@@ -3,22 +3,20 @@
 source ~/opt/anaconda3/etc/profile.d/conda.csh
 conda activate py39
 
-# declare -a stations=('calais-calais-france-refmar' \         
-#                 'denhelder-hel-nl-rws' \
-#                 'aberdeen-p038-uk-bodc' \
-#                 # 'cuxhaven-cuxhaven-germany-bsh' \
-#                 # 'esbjerg-130121-denmark-dmi' \
-#                 # 'brest-brest-france-refmar' \
-#                 # 'delfzijl-del-nl-rws' \
-#                 # 'hoekvanholla-hvh-nl-rws'
-#                 )
+declare -a coasts=('NE_Atlantic_Yellow' 'NE_Atlantic_Red' 'NW_Atlantic_Blue' 'Japan_Red')
 
+declare -a losses=('mse' \
+                'Gumbel')
+                #'Frechet' \
+                #)
 
-# # Loop through each station in the array stations and print the station name
-# for station in "${!stations[@]}"; do
-#     echo "Station: ${stations[$station]}"
-#     # Run the script
-#     python -W ignore ML_env_Beck.py ${stations[$station]} 'ANN' 'gumbel'
-# done
+for coast in "${!coasts[@]}"; do
+    echo "Coast: ${coasts[$coast]}"
 
-python -W ignore ML_env_Coast.py 'NE Atlantic Yellow' 'ANN' 'Gumbel'
+    for loss in "${!losses[@]}"; do
+        echo "Loss: ${losses[$loss]}"
+
+        # Run the Script
+        python -W ignore ML_env_Coast.py ${coasts[$coast]} 'ALL' ${losses[$loss]}
+    done
+done

@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Using machine learning to predict coastal hydrographs
-
-Timothy Tiggeloven and Anaïs Couasnon
-"""
 import os
 import sys
 
@@ -19,8 +14,8 @@ loss = sys.argv[3]
 # ML = 'ANN'
 # loss = 'mse'
 # station = 'cuxhaven-cuxhaven-germany-bsh'  # 'Cuxhaven' 'Hoek van Holland', Puerto Armuelles
-# ML = 'ANN'  # 'LSTM', 'CNN', 'ConvLSTM', 'ANN', 'ALL', 'LSTM_TCN'
-# loss = 'gumbel' #'mae'  # 'mae', 'mean_squared_logarithmic_error', 'mean_squared_error'
+# ML = 'ANN'
+# loss = 'gumbel' # 'mae', 'mean_squared_logarithmic_error', 'mean_squared_error'
 
 resample = 'hourly' # 'hourly' 'daily'
 resample_method = 'rolling_mean'  # 'max' 'res_max' 'rolling_mean' ## res_max for daily and rolling_mean for hourly
@@ -29,7 +24,7 @@ tt_value = 0.67  # train-test value
 scaler = 'std_normal'  # std_normal, MinMax
 n_ncells = 0
 epochs = 25
-batch = 100
+batch = 10
 batch_normalization = False
 neurons = 48
 filters = 8

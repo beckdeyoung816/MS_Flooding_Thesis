@@ -19,11 +19,12 @@ import tensorflow_probability as tfp
 # from darts import datasets as ds
 import tcn
 
+os.chdir('/Users/beck/My Drive/VU/Thesis/Scripts/Beck_Thesis/')
 
 from LSTM import LSTM
 import to_learning
 import performance
-# import model_run_coast as mr
+import model_run_coast as mr
 import Coastal_Model as cm
 
 import matplotlib.pyplot as plt
@@ -31,9 +32,14 @@ from keras.callbacks import EarlyStopping
 import keras.backend as K
 import tensorflow as tf
 tf.compat.v1.enable_eager_execution()
+from sklearn.metrics import mean_squared_error
+
+# Import mean squared error from scikit learn
+
+
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-os.chdir('/Users/beck/My Drive/VU/Thesis/Scripts/Beck_Thesis/')
+
 
 
 # %%
@@ -668,28 +674,31 @@ plt.show()
 #                    scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold,
 #                    logger)
 # %%
-coast = 'NE Atlantic Yellow'
+coast = 'NE_Atlantic_Yellow'
 stations = {}
-for station in mr.get_coast_stations(coast):
+for station in reversed(mr.get_coast_stations(coast)[0:2]):
     # Get input data for the station
     # This includes the train, test, and validation data, as well as the scaler and transformed data for inverse transforming
     stations[station] = mr.get_input_data(station, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger)
                                 
 # %%
 sherpa_output = None
-verbose = 1
+verbose = 0
 loss = 'gumbel'
 ML = 'ANN'
 model = cm.Coastal_Model(stations, ML, loss, n_layers, neurons, activation, dropout, drop_value,
                                       hyper_opt, validation, optimizer, epochs, batch, verbose, model_dir, filters,
                                       variables, batch_normalization, sherpa_output, logger, name_model,
-                                      alpha=None, s=None, gamma=1.1, l1=l1, l2=l2, mask_val=mask_val)
+                                      alpha=None, s=None, gamma=10.1, l1=l1, l2=l2, mask_val=mask_val)
 
 # %%
 i = 0
 model.design_network()
 model.compile()
 model.train_model(i=i)
+
+# %%
+model.predict(i)
 # %%
 station = model.station_inputs['calais-calais-france-refmar']
 # for station in model.station_inputs.values():
@@ -727,4 +736,16 @@ for station in stations.values():
     plt.hist(station.train_y)
     plt.title(station.name)
     plt.show()
+# %%
+extremes_indices = (pd.DataFrame(y)
+                    .nlargest(round(.1*len(y)), 0)
+                    .sort_index()
+                    .index.values)
+
+inv_test_y_ext = station.inv_test_y[extremes_indices]
+inv_test_preds_ext = station.inv_test_preds[extremes_indices]
+
+rmse_ext = np.sqrt(mean_squared_error(inv_test_y_ext, inv_test_preds_ext))
+relative_rsme_ext = rmse_ext / station.inv_test_y.mean()
+
 # %%

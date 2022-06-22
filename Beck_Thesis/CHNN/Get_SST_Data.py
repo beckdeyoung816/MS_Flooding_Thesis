@@ -1,16 +1,12 @@
-# %%
-import geemap
 import ee
 import os
-import rioxarray
 import xarray as xr
 import numpy as np
-import matplotlib.pyplot as plt
-import geopandas as gpd
 
 import pandas as pd
 import to_learning
 import os
+
 os.chdir('..')
 
 ee.Initialize()
@@ -79,36 +75,13 @@ def add_sst_to_ds(station_name, longitude, latitude):
     print('Writing')
     sst_ds.to_netcdf('Input_nc_sst/' + station_name + '.nc') # Write to a new file
 
-# %%
+
 sst = (ee.ImageCollection('NOAA/CDR/SST_PATHFINDER/V53')
             .select('sea_surface_temperature'))
-# %%
+
 stations = pd.read_excel('Coast_orientation/stations.xlsx', sheet_name='Selected Stations')
-# %%
+
 for index, station in stations.iterrows():
-    print(f'Station: {station["Station"]}')
+    print(f'Station: {station["Station"]}\n')
     
     add_sst_to_ds(station['Station'], station['Lon'], station['Lat'])
-
-# %%
-# Testing for Cuxhaven
-station = 'cuxhaven-cuxhaven-germany-bsh'
-stations = pd.read_excel('Coast_orientation/stations.xlsx')
-
-station = stations[stations['Station'] == station].reset_index(drop=True).loc[0,:]
-# %%
-add_sst_to_ds(station['Station'], station['Lon'], station['Lat'])
-
-# %%
-des_stations = ['calais-calais-france-refmar',         
-                'denhelder-hel-nl-rws',
-                'aberdeen-p038-uk-bodc',
-                'cuxhaven-cuxhaven-germany-bsh',
-                'esbjerg-130121-denmark-dmi',
-                'brest-brest-france-refmar',
-                'delfzijl-del-nl-rws',
-                'hoekvanholla-hvh-nl-rws']
-
-des_stations2 = stations[stations['Station'].isin(des_stations)]
-
-# %%
