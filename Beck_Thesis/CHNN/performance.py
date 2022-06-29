@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Performance of ANN
-
-Timothy Tiggeloven and Anaïs Couasnon
-"""
-
-import matplotlib
 #matplotlib.use('Agg')
 import cartopy
 import cartopy.crs as ccrs
@@ -27,6 +20,7 @@ import os
 import seaborn as sns
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score,  mean_absolute_error
+from sklearn.metrics import precision_score, recall_score, f1_score
 import properscoring as ps
 # from ranky import rankz
 import statsmodels.api as sm
@@ -40,6 +34,113 @@ months = mdates.MonthLocator()  # every month
 weeks = mdates.WeekdayLocator()  # every month
 days = mdates.DayLocator()
 
+def get_coastline_results(stations):
+    results = {}
+    results['RMSE'] = np.array([station.rmse for station in stations])
+    results['Rel_RMSE'] = np.array([station.rel_rmse for station in stations])
+    results['NSE'] = np.array([station.NSE for station in stations])
+    results['R2'] = np.array([station.r2 for station in stations])
+    results['MAE'] = np.array([station.mae for station in stations])
+    # results['corrcoef'] = np.array([station.corrcoef for station in stations])
+    results['RMSE\nExtremes'] = np.array([station.rmse_ext for station in stations])
+    results['Rel RMSE\nExtremes'] = np.array([station.rel_rmse_ext for station in stations])
+    results['Precision'] = np.array([station.precision for station in stations])
+    results['Recall'] = np.array([station.recall for station in stations])
+    results['F1'] = np.array([station.f1 for station in stations])
+    
+    results_df = pd.DataFrame(index = ['RMSE', 'Rel_RMSE', 'NSE', 'R2', 'MAE', 'RMSE\nExtremes', 'Rel RMSE\nExtremes', 'Precision', 'Recall', 'F1'], 
+                           columns = ['Min', 'Max', 'Mean', 'Median'])
+    
+    for metric in results.keys():
+        results_df.loc[metric, 'Min'] = np.min(results[metric])
+        results_df.loc[metric, 'Max'] = np.max(results[metric])
+        results_df.loc[metric, 'Mean'] = np.mean(results[metric])
+        results_df.loc[metric, 'Median'] = np.median(results[metric])
+    
+    return results_df
+
+#**************************************** MY FUNCTIONS ****************************************
+def get_ens_class_metrics(station, df_test):
+    filter_col = [col for col in df_test if col.startswith('Modelled')]
+    obs = df_test['Observed'].values
+    ensemble_preds = df_test[filter_col].values
+    preds = df_test[filter_col].mean(axis =1).values # Average predictions across all models
+    
+    rmse, NSE, r2, mae = performance_metrics(obs, preds)
+    corrcoef = np.corrcoef(obs, preds)**2
+    
+    # Calculating RMSE
+    rel_rmse = rmse/np.mean(obs)
+    
+    # Calculating RMSE for Extremes    
+    extremes = (pd.DataFrame(obs)
+                .nlargest(round(.10*len(obs)), 0) # Largest 10%
+                .sort_index())
+    min_ext = extremes.iloc[:,0].min() # Minimum of Largest 10% to use as threshold lower bound
+    extremes_indices = extremes.index.values
+                        
+    obs_ext = obs[extremes_indices]
+    pred_ext = preds[extremes_indices]
+
+    rmse_ext = np.sqrt(mean_squared_error(obs_ext, pred_ext))
+    rel_rmse_ext = rmse_ext / obs.mean()
+    
+    # Precision and recall and f1 score for extremes
+    
+    ext_df = pd.DataFrame([obs, preds], index = ['Obs', 'Pred']).T
+    ext_df['Extreme_obs'] = ext_df['Obs'] >= min_ext
+    ext_df['Extreme_pred'] = ext_df['Pred'] >= min_ext
+    
+    precision_ext = precision_score(ext_df['Extreme_obs'], ext_df['Extreme_pred'])
+    recall_ext = recall_score(ext_df['Extreme_obs'], ext_df['Extreme_pred'])
+    f1_ext = f1_score(ext_df['Extreme_obs'], ext_df['Extreme_pred'])
+    
+    # Store results for the station
+    station.rmse = rmse
+    station.rel_rmse = rel_rmse
+    station.NSE = NSE
+    station.r2 = r2
+    station.mae = mae
+    station.corrcoef = corrcoef
+    station.rmse_ext = rmse_ext
+    station.rel_rmse_ext = rel_rmse_ext
+    station.precision=precision_ext
+    station.recall=recall_ext
+    station.f1=f1_ext
+    
+    return np.around(rmse,4), np.around(rel_rmse,4), np.around(NSE,3), np.around(r2,2), np.around(mae,3), \
+        np.around(corrcoef,4), np.around(rmse_ext,4), np.around(rel_rmse_ext,4), np.around(precision_ext,3), np.around(recall_ext,3), np.around(f1_ext, 3)
+        
+def plot_ens_metrics(station, df_test, ax):
+    rmse, rel_rmse, NSE, r2, mae, corrcoef, rmse_ext, rel_rmse_ext, precision_ext, recall_ext, f1_ext = get_ens_class_metrics(station, df_test)
+    
+    # ax.set_title('Ensemble Metrics')
+    # hide axes
+    ax.grid(False)
+    ax.axis('off')
+
+    row_labels=['Value']
+    col_labels=['RMSE', 'Rel_RMSE', 'NSE', 'R2', 'MAE', 'RMSE\nExtremes', 'Rel RMSE \n Extremes', 'Precision', 'Recall', 'F1'] 
+    table_vals=[[[rmse], [rel_rmse], [NSE], [r2], [mae], [rmse_ext], [rel_rmse_ext], [precision_ext], [recall_ext], [f1_ext]]]
+    table_vals=[[rmse, rel_rmse, NSE, r2, mae, rmse_ext, rel_rmse_ext, precision_ext, recall_ext, f1_ext]]
+    
+    row_labels=['Value']
+    col_labels=['RMSE', 'Rel_RMSE', 'RMSE\nExtremes', 'Rel RMSE \n Extremes', 'Precision', 'Recall', 'F1'] 
+    table_vals=[[rmse, rel_rmse,rmse_ext, rel_rmse_ext, precision_ext, recall_ext, f1_ext]]
+
+    colcolors = plt.cm.Blues([0.1] *  len(col_labels))
+    rowcolors = plt.cm.Oranges([0.1] *  len(row_labels))
+    table = ax.table(cellText = table_vals, rowLabels =row_labels, colLabels = col_labels, loc='center',
+                     colColours=colcolors, rowColours=rowcolors, colWidths = [0.1]*len(col_labels), cellLoc='center')
+    
+    cellDict = table.get_celld()
+    for i in range(0,len(col_labels)):
+        cellDict[(0,i)].set_height(.15)
+    table.set_fontsize(12)
+    table.scale(2, 2) 
+
+
+
 def store_result(inv_yhat, inv_y):
     # plot results
     df_test = pd.DataFrame()
@@ -48,54 +149,54 @@ def store_result(inv_yhat, inv_y):
     df_test = df_test[['Observed', 'Modelled']].copy()
     return df_test
 
-def ensemble_handler(result_dict, station, neurons, epochs, batch, resample, tt_value, var_num,
+def ensemble_handler(station, result_dict, station_name, neurons, epochs, batch, resample, tt_value, var_num,
                      out_dir, layers=1, ML='LSTM', test_on='ensemble', plot=True, save=False, loss='mae', i = 0):
     df_result = result_dict['data'][i].copy()
     df_result.rename(columns = {'Modelled': "Modelled_0"}, inplace = True)
 
-    df_train = pd.DataFrame(result_dict['train_loss'][i].copy(), columns = [0])
-    df_test = pd.DataFrame(result_dict['test_loss'][i].copy(), columns = [0])
+    df_train_loss = pd.DataFrame(result_dict['train_loss'][i].copy(), columns = [0])
+    df_test_loss = pd.DataFrame(result_dict['test_loss'][i].copy(), columns = [0])
 
     for key in np.arange(1, len(result_dict['data']),1):
         # print(key)
         df_result = pd.concat([df_result, result_dict['data'][key].rename(columns={'Modelled':f"Modelled_{key}"}).loc[:,f"Modelled_{key}"]], axis = 1)    
-        df_train = pd.concat([df_train, pd.DataFrame(result_dict['train_loss'][key], columns = [key])], axis = 1, ignore_index=True)      
-        df_test = pd.concat([df_test, pd.DataFrame(result_dict['test_loss'][key], columns = [key])], axis = 1, ignore_index=True)    
+        df_train_loss = pd.concat([df_train_loss, pd.DataFrame(result_dict['train_loss'][key], columns = [key])], axis = 1, ignore_index=True)      
+        df_test_loss = pd.concat([df_test_loss, pd.DataFrame(result_dict['test_loss'][key], columns = [key])], axis = 1, ignore_index=True)    
 
-    cols = [f'Modelled_{col_name}' for col_name in df_train.columns] 
-    df_train.columns = cols
-    df_test.columns = cols
+    cols = [f'Modelled_{col_name}' for col_name in df_train_loss.columns] 
+    df_train_loss.columns = cols
+    df_test_loss.columns = cols
 
     df_modelled = df_result.drop('Observed', axis = 1)
     df_result['max'] = df_modelled.max(axis = 1)
     df_result['min'] = df_modelled.min(axis = 1)
     df_result['median'] = df_modelled.median(axis = 1) 
     
-    df_train['max'] = df_train.max(axis = 1)
-    df_train['min'] = df_train.min(axis = 1)
+    df_train_loss['max'] = df_train_loss.max(axis = 1)
+    df_train_loss['min'] = df_train_loss.min(axis = 1)
     
-    df_test['max'] = df_test.max(axis = 1)
-    df_test['min'] = df_test.min(axis = 1)
+    df_test_loss['max'] = df_test_loss.max(axis = 1)
+    df_test_loss['min'] = df_test_loss.min(axis = 1)
     
     if save == True:
         os.makedirs(os.path.join(out_dir, 'Data'), exist_ok=True)
         
-        fn = f'{station}_{ML}_{loss}_prediction.csv'       
+        fn = f'{station_name}_{ML}_{loss}_prediction.csv'       
         df_result.to_csv(os.path.join(out_dir, 'Data', fn))
         
-        fn = f'{station}_{ML}_{loss}_training.csv'
-        df_train.to_csv(os.path.join(out_dir, 'Data',fn))
+        fn = f'{station_name}_{ML}_{loss}_training.csv'
+        df_train_loss.to_csv(os.path.join(out_dir, 'Data',fn))
         
-        fn = f'{station}_{ML}_{loss}_testing.csv'
-        df_test.to_csv(os.path.join(out_dir, 'Data', fn))
+        fn = f'{station_name}_{ML}_{loss}_testing.csv'
+        df_test_loss.to_csv(os.path.join(out_dir, 'Data', fn))
     
     if plot == True:
-        plot_ensemble_performance(df_result, df_train, df_test, station, neurons, epochs, batch, resample,
+        plot_ensemble_performance(station, df_result, df_train_loss, df_test_loss, station_name, neurons, epochs, batch, resample,
                          tt_value, var_num, out_dir, layers=layers, ML=ML, test_on=test_on, loss=loss)
     
-    return df_result, df_train, df_test
+    return df_result, df_train_loss, df_test_loss
 
-def plot_ensemble_performance(df, train_loss, test_loss, station, neurons, epochs, batch, resample,
+def plot_ensemble_performance(station, df, train_loss, test_loss, station_name, neurons, epochs, batch, resample,
                      tt_value, var_num, out_dir, layers=1, ML='LSTM', test_on='ensemble', logger=False, loss='mae'):
     if resample == 'hourly':
         step = 24
@@ -107,19 +208,40 @@ def plot_ensemble_performance(df, train_loss, test_loss, station, neurons, epoch
     else:
         fig = plt.figure(figsize=[14.5, 9.5])
 
-    gs = GridSpec(3, 3)
+    # gs = GridSpec(4, 3)
 
-    plot_ensemble_testing_ts(df, fig.add_subplot(gs[0, 0:2]))
-    plot_ensemble_testing_max_ts(df, fig.add_subplot(gs[1, 0:2]), resample)
-    plot_meta(fig.add_subplot(gs[0, 2]), station, neurons, epochs, batch, resample, tt_value, var_num)    
-    plot_ensemble_metrics(df.dropna(axis=0, how='any'), fig.add_subplot(gs[1, 2]))
-    plot_ensemble_scatter(df[['Observed', 'median']], fig.add_subplot(gs[2, 0]))
-    plot_ensemble_qq(df.dropna(axis=0, how='any'), fig.add_subplot(gs[2, 1]))
-    plot_ensemble_loss(train_loss, test_loss, fig.add_subplot(gs[2, 2]))
+    # plot_ensemble_testing_ts(df, fig.add_subplot(gs[0, 0:2]))
+    # plot_ensemble_testing_max_ts(df, fig.add_subplot(gs[1, 0:2]), resample)
+    # plot_meta(fig.add_subplot(gs[0, 2]), station, neurons, epochs, batch, resample, tt_value, var_num)    
+    # plot_ensemble_metrics(df.dropna(axis=0, how='any'), fig.add_subplot(gs[1, 2]))
+    # #plot_ens_metrics(df.dropna(axis=0, how='any'), fig.add_subplot(gs[1, 2]))
+    # plot_ensemble_scatter(df[['Observed', 'median']], fig.add_subplot(gs[2, 0]))
+    # plot_ensemble_qq(df.dropna(axis=0, how='any'), fig.add_subplot(gs[2, 1]))
+    # plot_ensemble_loss(train_loss, test_loss, fig.add_subplot(gs[2, 2]))
+    # plot_ens_metrics(df.dropna(axis=0, how='any'), fig.add_subplot(gs[3, :]))
 
-    fig.suptitle(station, fontsize=32)
+    # fig.suptitle(station, fontsize=32)
+    # plt.tight_layout(rect=[0, 0, 1, 0.95]) # [left, bottom, right, top]
+    
+    
+    fig = plt.figure(figsize=[15, 15])
+
+    gs = GridSpec(8, 6)
+
+    plot_ensemble_testing_ts(df, fig.add_subplot(gs[:2, 0:4]))
+    plot_ensemble_testing_max_ts(df, fig.add_subplot(gs[2:4, 0:4]), resample)
+    plot_meta(fig.add_subplot(gs[:2, 4:]), station_name, neurons, epochs, batch, resample, tt_value, var_num)    
+    plot_ensemble_metrics(df.dropna(axis=0, how='any'), fig.add_subplot(gs[2:4, 4:]))
+    plot_ensemble_scatter(df[['Observed', 'median']], fig.add_subplot(gs[4:6, :2]))
+    plot_ensemble_qq(df.dropna(axis=0, how='any'), fig.add_subplot(gs[4:6, 2:4]))
+    plot_ensemble_loss(train_loss, test_loss, fig.add_subplot(gs[4:6, 4:]))
+    plot_ens_metrics(station, df.dropna(axis=0, how='any'), fig.add_subplot(gs[6:, 1:5]))
+
+    fig.suptitle(station_name, fontsize=32)
     plt.tight_layout(rect=[0, 0, 1, 0.95]) # [left, bottom, right, top]
-    fn = f'{station}_{ML}_{loss}.png'
+    
+    
+    fn = f'{station_name}_{ML}_{loss}.png'
     os.makedirs(os.path.join(os.path.split(out_dir)[0], ML, 'Figures'), exist_ok=True)
     plt.savefig(os.path.join(os.path.split(out_dir)[0], ML, 'Figures', fn), dpi=100)
     plt.close()
@@ -135,18 +257,18 @@ def plot_ensemble_metrics(df_test, ax):
         inv_yhat = df_test[i].values
         rmse_all.loc[i,0], NSE_all.loc[i,0], R2_all.loc[i,0], mae_all.loc[i,0] = performance_metrics(inv_y, inv_yhat) #Add print statement?
 
-    rmse_all.loc['median',0] = np.around(np.float(rmse_all.median(axis = 0)),4)
-    rmse_all.loc['max',0] = np.around(np.float(rmse_all.max(axis = 0)),4)
-    rmse_all.loc['min',0] = np.around(np.float(rmse_all.min(axis = 0)),4)  
-    NSE_all.loc['max',0] = np.around(np.float(NSE_all.max(axis = 0)),4)  
-    NSE_all.loc['min',0] = np.around(np.float(NSE_all.min(axis = 0)),4)         
-    R2_all.loc['max',0] = np.around(np.float(R2_all.max(axis = 0)),4)  
-    R2_all.loc['min',0] = np.around(np.float(R2_all.min(axis = 0)),4)      
-    mae_all.loc['max',0] = np.around(np.float(mae_all.max(axis = 0)),4)  
-    mae_all.loc['min',0] = np.around(np.float(mae_all.min(axis = 0)),4)  
-    NSE_all.loc['median',0] = np.around(np.float(NSE_all.median(axis = 0)),4)
-    R2_all.loc['median',0] = np.around(np.float(R2_all.median(axis = 0)),4)
-    mae_all.loc['median',0] = np.around(np.float(mae_all.median(axis = 0)),4)      
+    rmse_all.loc['median',0] = np.around(float(rmse_all.median(axis = 0)),4)
+    rmse_all.loc['max',0] = np.around(float(rmse_all.max(axis = 0)),4)
+    rmse_all.loc['min',0] = np.around(float(rmse_all.min(axis = 0)),4)  
+    NSE_all.loc['max',0] = np.around(float(NSE_all.max(axis = 0)),4)  
+    NSE_all.loc['min',0] = np.around(float(NSE_all.min(axis = 0)),4)         
+    R2_all.loc['max',0] = np.around(float(R2_all.max(axis = 0)),4)  
+    R2_all.loc['min',0] = np.around(float(R2_all.min(axis = 0)),4)      
+    mae_all.loc['max',0] = np.around(float(mae_all.max(axis = 0)),4)  
+    mae_all.loc['min',0] = np.around(float(mae_all.min(axis = 0)),4)  
+    NSE_all.loc['median',0] = np.around(float(NSE_all.median(axis = 0)),4)
+    R2_all.loc['median',0] = np.around(float(R2_all.median(axis = 0)),4)
+    mae_all.loc['median',0] = np.around(float(mae_all.median(axis = 0)),4)      
     # hide axes
     ax.grid(False)
     ax.axis('off')

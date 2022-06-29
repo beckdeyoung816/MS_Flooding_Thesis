@@ -28,7 +28,7 @@ batch = 10
 batch_normalization = False
 neurons = 48
 filters = 8
-n_layers = 1  # now only works for uniform layers with same settings
+n_layers = 1  
 activation = 'relu'  # 'relu', 'swish', 'Leaky ReLu', 'sigmoid', 'tanh'
 optimizer = 'adam'  # SGD(lr=0.01, momentum=0.9), 'adam'
 dropout = True

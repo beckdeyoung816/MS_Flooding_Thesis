@@ -1,5 +1,8 @@
+'''
+Script to get Sea surface temperature for desired stations. Functions had to be broken up to be run on different computers because of GEE authentification
+'''
+
 import ee
-import os
 import xarray as xr
 import numpy as np
 
@@ -44,7 +47,7 @@ def add_sst_to_ds(station_name, longitude, latitude):
     """
     
     # Load in original data
-    df, ds, dir = to_learning.load_file(station_name, input_dir = 'Input_nc')
+    df, ds, dir = to_learning.load_file(station_name, input_dir = '../Input_nc')
 
     # Get the start and end dates of the dataset to get those same dates for the SST data
     start = np.min(np.array(ds.time))
@@ -76,12 +79,40 @@ def add_sst_to_ds(station_name, longitude, latitude):
     sst_ds.to_netcdf('Input_nc_sst/' + station_name + '.nc') # Write to a new file
 
 
+def get_sst_data(station):
+
+    station_sst = (sst.filter(ee.Filter.date(station['start_date'], station['end_date']))
+                .getRegion(ee.Geometry.Point(station['Lon'], station['Lat']), 30)
+                .getInfo())
+    
+    # Convert to a pandas dataframe and convert to celsius
+    sst_df = ee_array_to_df(station_sst, ['sea_surface_temperature'])
+    sst_df['sst'] =  kelvin_to_celsius(sst_df['sea_surface_temperature'])
+    sst_df = sst_df[['datetime', 'sst']]
+        
+    sst_df['time'] = pd.to_datetime(sst_df['datetime'])
+    sst_ds = (sst_df.set_index('time')
+            .resample('H').mean().interpolate() # Resample hourly and interpolate between values
+            .to_xarray())
+    
+    print('Writing')
+    sst_ds.to_netcdf('Input_sst_data/' + station['Station'] + '_sst.nc') # Write to a new file
+    
+    
 sst = (ee.ImageCollection('NOAA/CDR/SST_PATHFINDER/V53')
             .select('sea_surface_temperature'))
 
-stations = pd.read_excel('Coast_orientation/stations.xlsx', sheet_name='Selected Stations')
+# stations = pd.read_csv('Coast_orientation/Selected_Stations.csv')
 
-for index, station in stations.iterrows():
-    print(f'Station: {station["Station"]}\n')
+# for index, station in stations.iterrows():
+#     print(f'Getting SST for Station: {station["Station"]}\n')
     
-    add_sst_to_ds(station['Station'], station['Lon'], station['Lat'])
+#     add_sst_to_ds(station['Station'], station['Lon'], station['Lat'])
+    
+    
+stations2 = pd.read_csv('Coast_orientation/Selected_Stations_dates.csv').dropna()
+
+for index, station in stations2.iterrows():
+    print(f'Getting SST for Station: {station["Station"]}\n')
+    
+    get_sst_data(station)

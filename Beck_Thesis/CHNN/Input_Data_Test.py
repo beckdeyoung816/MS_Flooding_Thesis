@@ -191,21 +191,6 @@ def get_input_data(station, variables, ML, input_dir, resample, resample_method,
             sherpa_output = None
     return test_X, test_y, train_X, train_y, val_X, val_y, n_train, result_all, sherpa_output, df
 
-# def gumbel_loss_hyper(gamma=1.1):
-#     def gumbel_loss(y_true, y_pred):
-#         u = y_pred - y_true
-        
-#         a = 1 - K.exp(-K.pow(u, 2))
-#         b= K.pow(a, gamma)
-#         c = tf.multiply(b, K.pow(u,2))
-#         d =K.exp(-c)
-#         e = K.mean(d)
-
-#         ll = -K.log(e)
-#         return ll
-    
-#     return gumbel_loss
-
 def gumbel_loss_hyper(gamma=1.1):
     def gumbel_loss(y_true, y_pred):
         u = y_pred - y_true
@@ -692,13 +677,11 @@ model = cm.Coastal_Model(stations, ML, loss, n_layers, neurons, activation, drop
                                       alpha=None, s=None, gamma=10.1, l1=l1, l2=l2, mask_val=mask_val)
 
 # %%
-i = 0
-model.design_network()
-model.compile()
-model.train_model(i=i)
-
-# %%
-model.predict(i)
+for i in range(2):
+    model.design_network()
+    model.compile()
+    model.train_model(i=i)
+    model.predict(i)
 # %%
 station = model.station_inputs['calais-calais-france-refmar']
 # for station in model.station_inputs.values():

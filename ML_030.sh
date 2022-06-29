@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH -n 24
-#SBATCH -t 5-00:00:00
-#SBATCH -p normal
+#SBATCH -n 24 # NUM PROCESSES
+#SBATCH -t 5-00:00:00 #ALLOCATED TIME TO RUN
+#SBATCH -p normal # MAYBE REMOVE
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=timothy.tiggeloven@vu.nl
 

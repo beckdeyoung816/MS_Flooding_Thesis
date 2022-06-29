@@ -1,14 +1,13 @@
 #!/bin/bash
 
-source ~/opt/anaconda3/etc/profile.d/conda.csh
+
+source ~/opt/anaconda3/condabin/conda
 conda activate py39
 
 declare -a coasts=('NE_Atlantic_Yellow' 'NE_Atlantic_Red' 'NW_Atlantic_Blue' 'Japan_Red')
 
 declare -a losses=('mse' \
                 'Gumbel')
-                #'Frechet' \
-                #)
 
 for coast in "${!coasts[@]}"; do
     echo "Coast: ${coasts[$coast]}"
