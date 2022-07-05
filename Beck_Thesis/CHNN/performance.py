@@ -59,7 +59,7 @@ def get_coastline_results(stations):
     
     return results_df
 
-#**************************************** MY FUNCTIONS ****************************************
+#**************************************** COASTAL FUNCTIONS ****************************************
 def get_ens_class_metrics(station, df_test):
     filter_col = [col for col in df_test if col.startswith('Modelled')]
     obs = df_test['Observed'].values

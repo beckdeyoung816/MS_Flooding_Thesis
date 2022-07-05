@@ -21,7 +21,6 @@ import tcn
 
 os.chdir('/Users/beck/My Drive/VU/Thesis/Scripts/Beck_Thesis/')
 
-from LSTM import LSTM
 import to_learning
 import performance
 import model_run_coast as mr
@@ -99,6 +98,7 @@ hyper_opt=False
 NaN_threshold=0
 
 station = 'cuxhaven-cuxhaven-germany-bsh'  # 'Cuxhaven' 'Hoek van Holland', Puerto Armuelles
+station = 'hoekvanholla-hvh-nl-rws'
 # station = 'harvest_oil_p.,ca-594a-usa-uhslc'
 resample = 'hourly' # 'hourly' 'daily'
 resample_method = 'rolling_mean'  # 'max' 'res_max' 'rolling_mean' ## res_max for daily and rolling_mean for hourly
@@ -111,7 +111,7 @@ batch = 100
 batch_normalization = False
 neurons = 48
 filters = 8
-n_layers = 1  # now only works for uniform layers with same settings
+n_layers = 3  # now only works for uniform layers with same settings
 activation = 'relu'  # 'relu', 'swish', 'Leaky ReLu', 'sigmoid', 'tanh'
 loss = 'mae' #'test' #'Gumbel' #'mae'  # 'mae', 'mean_squared_logarithmic_error', 'mean_squared_error'
 optimizer = tf.keras.optimizers.Adam(clipnorm=1) # 'adam'  # SGD(lr=0.01, momentum=0.9), 'adam'
@@ -660,6 +660,7 @@ plt.show()
 #                    logger)
 # %%
 coast = 'NE_Atlantic_Yellow'
+ML = 'LSTM'
 stations = {}
 for station in reversed(mr.get_coast_stations(coast)[0:2]):
     # Get input data for the station
@@ -670,7 +671,6 @@ for station in reversed(mr.get_coast_stations(coast)[0:2]):
 sherpa_output = None
 verbose = 0
 loss = 'gumbel'
-ML = 'ANN'
 model = cm.Coastal_Model(stations, ML, loss, n_layers, neurons, activation, dropout, drop_value,
                                       hyper_opt, validation, optimizer, epochs, batch, verbose, model_dir, filters,
                                       variables, batch_normalization, sherpa_output, logger, name_model,

@@ -1,7 +1,7 @@
 '''
 Script to get Sea surface temperature for desired stations. Functions had to be broken up to be run on different computers because of GEE authentification
 '''
-
+# %%
 import ee
 import xarray as xr
 import numpy as np
@@ -98,7 +98,6 @@ def get_sst_data(station):
     print('Writing')
     sst_ds.to_netcdf('Input_sst_data/' + station['Station'] + '_sst.nc') # Write to a new file
     
-    
 sst = (ee.ImageCollection('NOAA/CDR/SST_PATHFINDER/V53')
             .select('sea_surface_temperature'))
 
@@ -109,10 +108,14 @@ sst = (ee.ImageCollection('NOAA/CDR/SST_PATHFINDER/V53')
     
 #     add_sst_to_ds(station['Station'], station['Lon'], station['Lat'])
     
-    
-stations2 = pd.read_csv('Coast_orientation/Selected_Stations_dates.csv').dropna()
+stations2 = pd.read_csv('Coast_orientation/Selected_Stations_dates.csv').dropna().reset_index(drop=True)
 
 for index, station in stations2.iterrows():
     print(f'Getting SST for Station: {station["Station"]}\n')
     
     get_sst_data(station)
+    
+# REMOVE STATIONS WITHOUT DATA
+stations = pd.read_csv('Coast_orientation/Selected_Stations.csv')
+stations = stations[stations['Station'].isin(stations2['Station'])].reset_index(drop=True)
+stations.to_csv('Coast_orientation/Selected_Stations_w_Data.csv', index=False)

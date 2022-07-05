@@ -227,7 +227,7 @@ def select_ensemble(df, col, ML, batch, tt_value=0.7, frac_ens=0.5, mask_val=-99
         sequences = np.array(sequences)
         if len(sequences) < 20: #26
             print(f'Number of random sequences found was lower than 20 with: {len(sequences)}')
-            sys.exit(0)
+            #sys.exit(0)
         random_draw = np.random.choice(len(sequences), size=int(len(sequences)*frac_ens), replace=False)
         random_sequences = sequences[random_draw]
         random_sequences_train = random_sequences[:int(len(random_sequences)*tt_value)].flatten()

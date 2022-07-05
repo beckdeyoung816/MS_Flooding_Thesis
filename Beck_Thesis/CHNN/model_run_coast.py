@@ -87,12 +87,12 @@ def get_input_data(station, variables, ML, input_dir, resample, resample_method,
     # reframe ML station data
     test_year.loc[test_year.iloc[:,-1].isna(),'values(t)'] = mask_val #Changing all NaN values in residual testing year to masking_val                                                                                                                                            
     _, _, test_X, test_y, _ = to_learning.splitting_learning(test_year, df, 0, ML, variables, direction, lat_list, lon_list, batch, n_train=False)
-    print(f'Test X shape: {test_X.shape}')
-    print(f'Test y shape: {test_y.shape}')    
+    # print(f'Test X shape: {test_X.shape}')
+    # print(f'Test y shape: {test_y.shape}')    
     # shuffle df
     reframed_ensemble = reframed.copy()
     reframed_draw, n_train = to_learning.select_ensemble(reframed_ensemble, 'values(t)', ML, batch, tt_value=tt_value, frac_ens = frac_ens, mask_val=mask_val, NaN_threshold=NaN_threshold) 
-
+    
     # We modify the input data so that it is masked        
     reframed_draw = reframed_draw.reset_index(drop=True).copy()
     reframed_draw[reframed_draw.iloc[:,-1]==mask_val] = mask_val
@@ -100,15 +100,17 @@ def get_input_data(station, variables, ML, input_dir, resample, resample_method,
     
     # reframe ML station data
     train_X, train_y, val_X, val_y, n_train = to_learning.splitting_learning(reframed_draw, df, tt_value, ML, variables, direction, lat_list, lon_list, batch, n_train=n_train)
-    print(f'Train X Shape: {train_X.shape}')
-    print(f'Train y Shape: {train_y.shape}')
-    print(f'Val X Shape: {val_X.shape}')
-    print(f'Val y Shape: {val_y.shape}')
+    # print(f'Train X Shape: {train_X.shape}')
+    # print(f'Train y Shape: {train_y.shape}')
+    # print(f'Val X Shape: {val_X.shape}')
+    # print(f'Val y Shape: {val_y.shape}')
+    
+
     return Station(station, train_X, train_y, test_X, test_y, val_X, val_y, scaler, df, reframed, 0, i_test_dates, test_year)
 
 
 def get_coast_stations(coast):
-    station_data = pd.read_csv('Coast_orientation/Selected_Stations.csv')
+    station_data = pd.read_csv('Coast_orientation/Selected_Stations_w_Data.csv')
     return station_data['Station'][station_data['Coast'] == coast].to_list()
 
 def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_method, scaler_type,
@@ -118,7 +120,7 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
 
     start1 = time.time()
     if ML in ['all', 'All', 'ALL']:
-        ML_list = ['ANN', 'LSTM', 'TCN']
+        ML_list = ['ANN', 'LSTM', 'TCN', 'TCN-LSTM']
     else:
         ML_list = [ML]
     print('ML_list is:', ML_list)
@@ -127,9 +129,12 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
         batch = batch * 24
     
     for ML in ML_list:
+        
         if not logger:
             print(f'\nStart ensemble run for {ML}\n')
             print('\n\n************************************************************************************\n\n')
+        print(f'\nStart ensemble run for {ML}\n')
+        print('\n\n************************************************************************************\n\n')
         start2 = time.time()
 
         # create model output directory
@@ -138,14 +143,17 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
 
+        
         # Get input data for each station
         stations = {}
         station_names = get_coast_stations(coast)
         rand.shuffle(station_names)
-        for station in station_names[:2]:
+        for station in station_names:# [:2]:
             # Get input data for the station
             # This includes the train, test, and validation data, as well as the scaler and transformed data for inverse transforming
-            stations[station] = get_input_data(station, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger)
+            input = get_input_data(station, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger)
+            if input is not None:
+                stations[station] = input
                                         
             
         for i in range(loop):

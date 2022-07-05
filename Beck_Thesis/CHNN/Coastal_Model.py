@@ -76,7 +76,6 @@ class Coastal_Model():
         
         # Loss function parameters
         if loss.lower() == 'gumbel':
-            print('GUMBEL')
             self.gamma = gamma
             self.custom_loss_fn = self.gumbel_loss_hyper(gamma=gamma)
             
@@ -122,53 +121,47 @@ class Coastal_Model():
         """
         # Time steps, num features
         input_shape = (1, len(self.vars))
-        # model = models.Sequential()
-        # # model.add(layers.Masking(mask_value=mask_val, input_shape=input_shape))
-        # for i in range(self.n_layers):
-        #     rs = False if i == self.n_layers - 1 else True
-        #     if self.activ == 'Leaky ReLu':
-        #         model.add(layers.LSTM(self.neurons, input_shape=input_shape, return_sequences=rs, activation=self.activ,  # added this activation to be sure, but not yet tested
-        #                             stateful=False, recurrent_activation='hard_sigmoid'))  # neurons refers to cells
-        #         model.add(layers.LeakyReLU(alpha=0.1))
-        #         # if self.dropout:
-        #         #     model.add(layers.Dropout(self.drop_value))
-        #     else:
-        #         model.add(layers.LSTM(self.neurons, input_shape=input_shape, activation=self.activ, 
-        #                 return_sequences=rs, recurrent_activation='hard_sigmoid'))  # recurrent_dropout=drop_value
-        #         # if self.dropout:
-        #         #     model.add(layers.Dropout(self.drop_value))
-        # model.add(layers.Dense(self.neurons, activation=self.activ, kernel_regularizer=keras.regularizers.l1_l2(l1=self.l1, l2=self.l2)))  # hidden layers
-        # if self.drop_out:
-        #     model.add(layers.Dropout(self.drop_value))
-        # model.add(layers.Dense(1, activation=self.activ)) #output layer
 
         model = models.Sequential()
-        model.add(layers.LSTM(self.neurons, input_shape=input_shape, activation=self.activ, return_sequences=True))
-        # model.add(layers.Dropout(.2))
-        model.add(layers.LSTM(self.neurons, activation=self.activ, return_sequences=False))
-        model.add(layers.Dropout(self.drop_value))
-        model.add(layers.Dense(self.neurons, activation=self.activ))
-        model.add(layers.Dropout(self.drop_value))
-        model.add(layers.Dense(1)) 
+        for i in range(self.n_layers):
+            rs = False if i == self.n_layers - 1 else True # Only return sequences if another LSTM layer is coming
+            if i == 0: # Specify the input shape for the first layer
+                model.add(layers.LSTM(self.neurons, input_shape=input_shape, activation=self.activ, return_sequences=rs,
+                                      name='lstm_input'))
+            else:
+                model.add(layers.LSTM(self.neurons, activation=self.activ, return_sequences=rs,
+                                      name=f'lstm_{i}'))
+        model.add(layers.Dropout(self.drop_value, name='dropout_1'))
+        model.add(layers.Dense(self.neurons, activation=self.activ, name='dense_1'))
+        model.add(layers.Dropout(self.drop_value, name='dropout_2'))
+        model.add(layers.Dense(1, name='dense_output'))
         
         self.model = model
         
         
-    def TCN_model(self):
+    def TCN_model(self, lstm=False):
         """
-        Design a TCN-LSTM model
+        Design a TCN model
         """
         # Time steps, num features
         input_shape = (1, len(self.vars))
         
         model = models.Sequential()
-        model.add(tcn.TCN(48, input_shape=input_shape, activation='relu', return_sequences=True,
-                    dilations=(1,2,4,8), dropout_rate=.2, kernel_size=3))
-        model.add(layers.LSTM(24, activation='relu', return_sequences=False))
-        # tcn_model.add(layers.Dropout(.2))
-        model.add(layers.Dense(10, activation='relu'))
-        # model.add(layers.Dense(5, activation='tanh'))
-        model.add(layers.Dense(1))
+        for i in range(self.n_layers):
+            rs = i < self.n_layers-1 or lstm # Only return sequences if another TCN layer is coming and no LSTM layer is added
+            if i == 0: # Specify the input shape for the first layer
+                model.add(tcn.TCN(self.neurons, input_shape=input_shape, activation='relu', return_sequences=rs,
+                    dilations=(1,2,4,8), dropout_rate=self.drop_value, kernel_size=5, name='tcn_input'))
+            else:
+                model.add(tcn.TCN(self.neurons, activation='relu', return_sequences=rs,
+                    dilations=(1,2,4,8), dropout_rate=self.drop_value, kernel_size=5, name=f'tcn_{i}'))
+        if lstm:
+            model.add(layers.LSTM(self.neurons, activation=self.activ, return_sequences=False))
+                
+        model.add(layers.Dropout(self.drop_value, name='dropout_1'))
+        model.add(layers.Dense(self.neurons, activation=self.activ, name='dense_1'))
+        model.add(layers.Dropout(self.drop_value, name='dropout_2'))
+        model.add(layers.Dense(1, name='dense_output'))
         
         self.model = model
     
@@ -192,6 +185,8 @@ class Coastal_Model():
             self.LSTM_model()
         elif self.ML == 'TCN':
             self.TCN_model()
+        elif self.ML == 'TCN-LSTM':
+            self.TCN_model(lstm=True)
             
             
     def compile(self):

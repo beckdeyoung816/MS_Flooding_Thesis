@@ -37,7 +37,7 @@ class Station():
         
     def predict(self, model, ensemble_loop, mask_val):
         
-        print(f'\nPredicting for {self.name}\n')
+        # print(f'\nPredicting for {self.name}\n')
         
         temp_df = self.test_year.replace(to_replace=mask_val, value=np.nan)[self.n_train_final:].copy()
 
@@ -55,13 +55,13 @@ class Station():
         
     def evaluate_model(self, ensemble_loop):
         
-        print('Station Level Evaluation')
-        print('-----------------------')
+        # print('Station Level Evaluation')
+        # print('-----------------------')
         # Calculating RMSE
         self.rmse = np.sqrt(mse(self.inv_test_y, self.inv_test_preds))
         self.rel_rmse = self.rmse/np.mean(self.inv_test_y)
-        print(f'RMSE: {self.rmse: .2f}\n')
-        print(f'Relative RMSE: {self.rel_rmse: .2f}\n')
+        # print(f'RMSE: {self.rmse: .2f}\n')
+        # print(f'Relative RMSE: {self.rel_rmse: .2f}\n')
         
          # Calculating RMSE for Extremes
          
@@ -77,8 +77,8 @@ class Station():
         self.rmse_ext = np.sqrt(mse(self.inv_test_y_ext, self.inv_test_preds_ext))
         self.rel_rmse_ext = self.rmse_ext / self.inv_test_y.mean()
         
-        print(f'\nRMSE Extremes: {self.rmse_ext: .2f}\n')
-        print(f'Relative RMSE Extremes: {self.rel_rmse_ext: .2f}\n')
+        # print(f'\nRMSE Extremes: {self.rmse_ext: .2f}\n')
+        # print(f'Relative RMSE Extremes: {self.rel_rmse_ext: .2f}\n')
         
         # Precision and recall and f1 score for extremes
         
@@ -90,9 +90,9 @@ class Station():
         self.recall_ext = recall_score(ext_df['Extreme_obs'], ext_df['Extreme_pred'])
         self.f1_ext = f1_score(ext_df['Extreme_obs'], ext_df['Extreme_pred'])
         
-        print(f'\nPrecision Extremes: {self.precision_ext: .2f}\n')
-        print(f'Recall Extremes: {self.recall_ext: .2f}\n')
-        print(f'F1 Extremes: {self.f1_ext: .2f}\n')
+        # print(f'\nPrecision Extremes: {self.precision_ext: .2f}\n')
+        # print(f'Recall Extremes: {self.recall_ext: .2f}\n')
+        # print(f'F1 Extremes: {self.f1_ext: .2f}\n')
         
         # Store Results
         df_all = performance.store_result(self.inv_test_preds, self.inv_test_y)
