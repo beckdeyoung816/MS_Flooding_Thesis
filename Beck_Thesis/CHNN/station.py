@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.metrics import mean_squared_error as mse
 import performance
 import matplotlib.pyplot as plt
-from sklearn.metrics import precision_score, recall_score, f1_score
+from sklearn.metrics import precision_score, recall_score, fbeta_score
 
 class Station():
     
@@ -88,7 +88,7 @@ class Station():
         
         self.precision_ext = precision_score(ext_df['Extreme_obs'], ext_df['Extreme_pred'])
         self.recall_ext = recall_score(ext_df['Extreme_obs'], ext_df['Extreme_pred'])
-        self.f1_ext = f1_score(ext_df['Extreme_obs'], ext_df['Extreme_pred'])
+        self.fbeta_ext = fbeta_score(ext_df['Extreme_obs'], ext_df['Extreme_pred'], beta=2)
         
         # print(f'\nPrecision Extremes: {self.precision_ext: .2f}\n')
         # print(f'Recall Extremes: {self.recall_ext: .2f}\n')
@@ -105,7 +105,7 @@ class Station():
         
         self.result_all['precision_ext'][ensemble_loop] = self.precision_ext
         self.result_all['recall_ext'][ensemble_loop] = self.recall_ext
-        self.result_all['f1_ext'][ensemble_loop] = self.f1_ext
+        self.result_all['fbeta_ext'][ensemble_loop] = self.fbeta_ext
         
         self.result_all['data'][ensemble_loop] = df_all.copy()
     

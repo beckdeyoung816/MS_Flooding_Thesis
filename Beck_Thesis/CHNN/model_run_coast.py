@@ -110,7 +110,7 @@ def get_input_data(station, variables, ML, input_dir, resample, resample_method,
 
 
 def get_coast_stations(coast):
-    station_data = pd.read_csv('Coast_orientation/Selected_Stations_w_Data.csv')
+    station_data = pd.read_csv('Coast_orientation/Selected_Stations_w_Data.csv').dropna().reset_index(drop=True)
     return station_data['Station'][station_data['Coast'] == coast].to_list()
 
 def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_method, scaler_type,
@@ -119,7 +119,7 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
              year='last', fn_exp='Models', arg_count=0, verbose=2, mask_val=-999, hyper_opt=False, NaN_threshold=0, validation='split'):
 
     start1 = time.time()
-    if ML in ['all', 'All', 'ALL']:
+    if ML.lower() == 'all':
         ML_list = ['ANN', 'LSTM', 'TCN', 'TCN-LSTM']
     else:
         ML_list = [ML]
@@ -141,7 +141,7 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
         model_dir = os.path.join(fn_exp, 'Ensemble_run', coast, ML)
 
         if not os.path.exists(model_dir):
-            os.makedirs(model_dir)
+            os.makedirs(model_dir, exist_ok=True)
 
         
         # Get input data for each station
@@ -167,7 +167,7 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
             model = Coastal_Model(stations, ML, loss, n_layers, neurons, activation, dropout, drop_value,
                                       hyper_opt, validation, optimizer, epochs, batch, verbose, model_dir, filters,
                                       variables, batch_normalization, sherpa_output, logger, name_model,
-                                      alpha=None, s=None, gamma=1.1, l1=l1, l2=l2, mask_val=mask_val)
+                                      alpha=None, s=None, gamma=10, l1=l1, l2=l2, mask_val=mask_val)
                              
             
             model.design_network()
@@ -193,7 +193,7 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
                                                                             test_on='ensemble', plot=True, save=True, loss=loss)
             coast_results = performance.get_coastline_results(model.station_inputs.values())
             print(coast_results)
-            coast_results.to_csv(os.path.join(model_dir, 'Data/coast_results.csv'))
+            coast_results.to_csv(os.path.join(model_dir, f'Data/coast_results_{ML}_{loss}.csv'))
             
         if logger:
             logger.info(f'{arg_count}: {ML} - {coast} - {round((time.time() - start2) / 60, 2)} min')

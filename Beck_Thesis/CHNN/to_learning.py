@@ -206,7 +206,7 @@ def select_ensemble(df, col, ML, batch, tt_value=0.7, frac_ens=0.5, mask_val=-99
         df_draw = df_draw.reset_index(drop = True)
         validation_data = None
         sequences = None
-    elif ML == 'LSTM' or ML == 'TCN':
+    elif ML in ['LSTM', 'TCN', 'TCN-LSTM']:
         # count consecutive NaN
         na_count = df[col].isnull().astype(int).groupby(df[col].notnull().astype(int).cumsum()).cumsum()
         na_count[na_count > 0] = np.nan  # 7*24
@@ -455,7 +455,7 @@ def split_tt(reframed, ML, tt_value, n_train):
         train_X, train_y = train[:, :-1], train[:, -1]
         test_X, test_y = test[:, :-1], test[:, -1]
     
-    if ML == 'LSTM' or ML == 'TCN':
+    if ML in ['LSTM', 'TCN', 'TCN-LSTM']:
         values = reframed.values
         if not n_train:
             n_train = int(values.shape[0] * tt_value)

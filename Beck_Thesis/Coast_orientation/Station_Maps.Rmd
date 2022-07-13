@@ -2,28 +2,168 @@
 title: "R Notebook"
 output: html_notebook
 ---
-```{r}
+```{r  message=F, warning=F}
 library(tidyverse)
 library(readxl)
+library(sf)
+library(spData)
+library(tmap)
 ```
 
 ```{r}
-stations <- read_excel('stations.xlsx', sheet = 'Selected Stations') %>% 
+stations <- read_csv('Selected_stations_w_Data.csv') %>% 
   dplyr::select(Coast, station = Station, lat = Lat, lon = Lon)
+stations_sf <- stations %>% st_as_sf(coords = c("lon", "lat"), crs = 4326)
+```
+
+```{r}
+tmp <- world$geom[world$name_long == 'France'] %>% 
+  st_cast('POLYGON') %>% st_cast("MULTIPOLYGON")
+
+world$geom[world$name_long == 'France'] <- tmp[2:3]
+
+tmp <- world$geom[world$name_long == 'Norway'] %>% 
+  st_cast('POLYGON') %>% st_cast("MULTIPOLYGON")
+
+world$geom[world$name_long == 'Norway'] <- tmp[4]
+```
+
+```{r}
+map_regions <- data.frame(coast = c("NE Atlantic",
+                                    "NE Pacific", 
+                                    "Japan"),
+                          loc = c('subregion %in% c("Western Europe", 
+                                  "Northern Europe", 
+                                  "Eastern Europe") & name_long != "Russian Federation"',
+                                  'iso_a2 %in% c("US", "CA")',
+                                  'name_long == "Japan"'),
+                          leg = c(T, F, F))
+
+
+maps <- NULL
+
+create_map <- function(i){
+  coast = map_regions$coast[i]
+  locs = map_regions$loc[i]
+  leg = map_regions$leg[i]
+  
+  if (coast == 'NE Atlantic') {
+    cols = c("red", "blue")
+    alpha =.6
+    
+  } else {
+      
+    cols = "red"
+    alpha = 1
+    
+    }
+    
+    world %>% 
+    filter(!!rlang::parse_expr(locs)) %>% 
+    tm_shape() + tm_borders() + tm_fill(col = "gray") +
+    tm_shape(stations_sf %>% filter(str_detect(Coast, coast))) + 
+    tm_dots(col='Coast', size = .1, palette = cols, alpha = alpha)  + 
+    tm_layout(legend.show = leg,
+              main.title = coast, 
+              main.title.position = "center" ,
+              main.title.fontface = 'bold',
+              legend.frame = T,
+              legend.position = c("left", "top"),
+              bg.color = "lightcyan",
+              legend.bg.alpha = 1,
+              legend.text.fontface = 'bold',
+              legend.title.fontface = 'bold')
+  
+}
+
+maps <- purrr::map(1:3, create_map)
+
+
+tm <- tmap_arrange(maps[[2]], maps[[1]], maps[[3]], outer.margins = 0, ncol = 2)
+tmap_save(tm, 'Selected_Stations_Map.png')
+tm
+```
+
+
+```{r}
+map_regions <- data.frame(coast = c("NE Atlantic 1",
+                                    "NE Atlantic 2",
+                                    "NE Pacific", 
+                                    "Japan"),
+                          loc = c(rep('subregion %in% c("Western Europe", 
+                                  "Northern Europe", 
+                                  "Eastern Europe") & !name_long %in%  c("Russian Federation", "Iceland")', 2),
+                                  'iso_a2 %in% c("US", "CA")',
+                                  'name_long == "Japan"'))
+
+
+maps <- NULL
+
+create_map <- function(i){
+  coast = map_regions$coast[i]
+  locs = map_regions$loc[i]
+  leg = map_regions$leg[i]
+  
+  stations <- stations_sf %>% filter(Coast == coast)
+  num_stations <- nrow(stations)
+    world %>% 
+    filter(!!rlang::parse_expr(locs)) %>% 
+    tm_shape() + tm_borders() + tm_fill(col = "gray") +
+    tm_shape(stations, position=c("left", "bottom")) + 
+    tm_dots(col='Coast', size = .1, palette = 'red')  + 
+    tm_credits(glue::glue('Num Stations: {num_stations}'),
+               position=c("left", "top"),
+               fontface = 'bold') + 
+    tm_layout(legend.show = F,
+              main.title = coast, 
+              main.title.position = "center" ,
+              main.title.fontface = 'bold',
+              bg.color = "lightcyan") 
+  
+}
+
+maps <- purrr::map(1:4, create_map)
+
+
+tm <- tmap_arrange(maps[[1]], maps[[2]], maps[[3]], maps[[4]], outer.margins = 0, ncol = 2)
+tm
+
+```
+
+```{r }
+tmap_save(tm, 'Selected_Stations_Map.png')
+```
+
+```{r }
+#tm_facets('continent') + 
+  tm_shape(stations_sf) + 
+  tm_dots(col='Coast', size = .2, palette = c('red','yellow', 'green', 'blue'))  + 
+  tm_layout(legend.position = c("LEFT","BOTTOM"),
+            legend.frame = TRUE) + 
+  tm_shape(selected_areas) + tm_borders() + tm_fill() +
+  tm_facets('subregion', free.coords =FALSE, free.scales=FALSE) 
 ```
 
 ```{r}
 library(maps)
-```
-
-```{r}
+library(spDataLarge)
 map("world", fill=TRUE, col="white", bg="gray", ylim=c(-60, 90), mar=c(0,0,0,0))
 ```
-```{r}
-library(sf)
 
-stations_sf <- stations %>% sf::as_Spatial()
-stations %>% ggplot() + 
-  geom_sf()
+```{r}
+
+ggplot() + 
+  geom_sf(data = world, fill = NA, color = "gray45") + # borders of Scotland
+  geom_sf(data = stations_sf, pch = 4, color = "red") + # the distilleries
+  theme_void()
+```
+
+
+```{r}
+country = 'Norway'
+country = world %>% filter(name_long == country)
+world %>% filter(subregion == 'Northern Europe') %>% 
+  tm_shape() + tm_borders() + tm_fill() + 
+ tm_shape(country) + tm_fill('blue')
 ```
 

@@ -1,12 +1,12 @@
 ﻿Coast,ID,Lat,Lon,Station,Country,State,Angle,Distance,Direction,Lat target,Lon target
-NE_Atlantic_Yellow,114,-4.5,48.38,brest-brest-france-refmar,France,Bretagne,-1.43,0,E,48.35,-3.25
-NE_Atlantic_Yellow,4,-2.07,57.14,aberdeen-p038-uk-bodc,United Kingdom,Scotland,179.81,0,W,57.15,-2.69
-NE_Atlantic_Yellow,131,1.87,50.97,calais-calais-france-refmar,France,Nord-Pas-de-Calais,-62.97,0,S,50.63,2.04
-NE_Atlantic_Yellow,415,4.12,51.98,hoekvanholla-hvh-nl-rws,Netherlands,Zuid-Holland,22.47,0,E,52.16,4.56
-NE_Atlantic_Yellow,260,4.75,52.97,denhelder-hel-nl-rws,Netherlands,Noord-Holland,-72.53,0,S,52.55,4.88
-NE_Atlantic_Yellow,259,6.93,53.33,delfzijl-del-nl-rws,Netherlands,Groningen,-149.95,0,W,53.22,6.74
-NE_Atlantic_Yellow,296,8.43,55.47,esbjerg-130121-denmark-dmi,Denmark,Syddanmark,-12.79,0,E,55.36,8.91
-NE_Atlantic_Yellow,234,8.72,53.87,cuxhaven-cuxhaven-germany-bsh,Germany,Niedersachsen,-84.57,0,S,53.57,8.74
+NE_Atlantic_Yellow,114,48.38,-4.5,brest-brest-france-refmar,France,Bretagne,-1.43,0,E,48.35,-3.25
+NE_Atlantic_Yellow,4,57.14,-2.07,aberdeen-p038-uk-bodc,United Kingdom,Scotland,179.81,0,W,57.15,-2.69
+NE_Atlantic_Yellow,131,50.97,1.87,calais-calais-france-refmar,France,Nord-Pas-de-Calais,-62.97,0,S,50.63,2.04
+NE_Atlantic_Yellow,415,51.98,4.12,hoekvanholla-hvh-nl-rws,Netherlands,Zuid-Holland,22.47,0,E,52.16,4.56
+NE_Atlantic_Yellow,260,52.97,4.75,denhelder-hel-nl-rws,Netherlands,Noord-Holland,-72.53,0,S,52.55,4.88
+NE_Atlantic_Yellow,259,53.33,6.93,delfzijl-del-nl-rws,Netherlands,Groningen,-149.95,0,W,53.22,6.74
+NE_Atlantic_Yellow,296,55.47,8.43,esbjerg-130121-denmark-dmi,Denmark,Syddanmark,-12.79,0,E,55.36,8.91
+NE_Atlantic_Yellow,234,53.87,8.72,cuxhaven-cuxhaven-germany-bsh,Germany,Niedersachsen,-84.57,0,S,53.57,8.74
 NE_Atlantic_Red,258,60.03,20.38,degerby-001-finland-fmi,Åland,Föglö,12.71,0,E,60.04,20.43
 NE_Atlantic_Red,324,60.41,18.21,forsmark-003-sweden-smhi,Sweden,Uppsala,-148.42,0.01,W,60.25,17.95
 NE_Atlantic_Red,350,64.92,21.23,furuogrund-004-sweden-smhi,Sweden,Västerbotten,166.13,0,W,65.06,20.64
@@ -47,12 +47,12 @@ Japan_Red,"1,167",34.47,136.85,toba-toba-japan-jma,Japan,Mie,179.64,0,W,34.47,13
 Japan_Red,"1,172",35.65,139.77,tokyo-tokyo-japan-jma,Japan,Tokyo,31.68,0,E,35.66,139.78
 Japan_Red,"1,192",35.02,138.88,uchiura-uchiura-japan-jma,Japan,Shizuoka,179.48,0,W,35.02,138.34
 Japan_Red,"1,269",35.47,139.63,yokohama-yokohama-japan-jma,Japan,Kanagawa,-170.14,0,W,35.41,139.34
-NW_Atlantic_Green,15,52,-176.63,"adak,alaska-040a-usa-uhslc",United States,Alaska,-131,0,S,51.79,-176.6971556
-NW_Atlantic_Green,212,61,-145.75,cordova-9454050-usa-noaa,United States,Alaska,-177,0.0029412,W,60.42,-148.5276522
-NW_Atlantic_Green,283,54,-166.54,"dutch_harbor_a,ak-041a-usa-uhslc",United States,Alaska,-149,0,W,53.67,-166.8948438
-NW_Atlantic_Green,913,54,-130.17,"princerupert,canada-princerupert,canada-glossdm-bodc",Canada,British Columbia,48,0,N,54.59,-129.9228321
-NW_Atlantic_Green,1032,55,-160.50,"sand_point,ak-574a-usa-uhslc",United States,Alaska,-13,0,E,55.31,-160.4029885
-NW_Atlantic_Green,1068,60,-149.43,seward-9455090-usa-noaa,United States,Alaska,19,0.003074655,E,60.42,-148.5276522
-NW_Atlantic_Green,1089,57,-135.34,"sitka,ak-559a-usa-uhslc",United States,Alaska,-18,0,E,56.96,-135.0464232
-NW_Atlantic_Green,1201,61,-146.36,"valdez,ak-562a-usa-uhslc",United States,Alaska,-162,0.000233249,W,60.42,-148.5276522
-NW_Atlantic_Green,1260,60,-139.74,"yakutat,ak-570a-usa-uhslc",United States,Alaska,4,0,E,59.60,-139.0376517
+NW_Pacific_Green,15,52,-176.63,"adak,alaska-040a-usa-uhslc",United States,Alaska,-131,0,S,51.79,-176.6971556
+NW_Pacific_Green,212,61,-145.75,cordova-9454050-usa-noaa,United States,Alaska,-177,0.0029412,W,60.42,-148.5276522
+NW_Pacific_Green,283,54,-166.54,"dutch_harbor_a,ak-041a-usa-uhslc",United States,Alaska,-149,0,W,53.67,-166.8948438
+NW_Pacific_Green,913,54,-130.17,"princerupert,canada-princerupert,canada-glossdm-bodc",Canada,British Columbia,48,0,N,54.59,-129.9228321
+NW_Pacific_Green,1032,55,-160.5,"sand_point,ak-574a-usa-uhslc",United States,Alaska,-13,0,E,55.31,-160.4029885
+NW_Pacific_Green,1068,60,-149.43,seward-9455090-usa-noaa,United States,Alaska,19,0.003074655,E,60.42,-148.5276522
+NW_Pacific_Green,1089,57,-135.34,"sitka,ak-559a-usa-uhslc",United States,Alaska,-18,0,E,56.96,-135.0464232
+NW_Pacific_Green,1201,61,-146.36,"valdez,ak-562a-usa-uhslc",United States,Alaska,-162,0.000233249,W,60.42,-148.5276522
+NW_Pacific_Green,1260,60,-139.74,"yakutat,ak-570a-usa-uhslc",United States,Alaska,4,0,E,59.6,-139.0376517

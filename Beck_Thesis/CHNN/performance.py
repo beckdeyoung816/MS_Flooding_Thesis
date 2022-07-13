@@ -20,7 +20,7 @@ import os
 import seaborn as sns
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score,  mean_absolute_error
-from sklearn.metrics import precision_score, recall_score, f1_score
+from sklearn.metrics import precision_score, recall_score, fbeta_score
 import properscoring as ps
 # from ranky import rankz
 import statsmodels.api as sm
@@ -46,9 +46,9 @@ def get_coastline_results(stations):
     results['Rel RMSE\nExtremes'] = np.array([station.rel_rmse_ext for station in stations])
     results['Precision'] = np.array([station.precision for station in stations])
     results['Recall'] = np.array([station.recall for station in stations])
-    results['F1'] = np.array([station.f1 for station in stations])
+    results['F_beta'] = np.array([station.fbeta_ext for station in stations])
     
-    results_df = pd.DataFrame(index = ['RMSE', 'Rel_RMSE', 'NSE', 'R2', 'MAE', 'RMSE\nExtremes', 'Rel RMSE\nExtremes', 'Precision', 'Recall', 'F1'], 
+    results_df = pd.DataFrame(index = ['RMSE', 'Rel_RMSE', 'NSE', 'R2', 'MAE', 'RMSE\nExtremes', 'Rel RMSE\nExtremes', 'Precision', 'Recall', 'F_beta'], 
                            columns = ['Min', 'Max', 'Mean', 'Median'])
     
     for metric in results.keys():
@@ -93,7 +93,7 @@ def get_ens_class_metrics(station, df_test):
     
     precision_ext = precision_score(ext_df['Extreme_obs'], ext_df['Extreme_pred'])
     recall_ext = recall_score(ext_df['Extreme_obs'], ext_df['Extreme_pred'])
-    f1_ext = f1_score(ext_df['Extreme_obs'], ext_df['Extreme_pred'])
+    fbeta_ext = fbeta_score(ext_df['Extreme_obs'], ext_df['Extreme_pred'], beta=2)
     
     # Store results for the station
     station.rmse = rmse
@@ -106,13 +106,13 @@ def get_ens_class_metrics(station, df_test):
     station.rel_rmse_ext = rel_rmse_ext
     station.precision=precision_ext
     station.recall=recall_ext
-    station.f1=f1_ext
+    station.fbeta_ext=fbeta_ext
     
     return np.around(rmse,4), np.around(rel_rmse,4), np.around(NSE,3), np.around(r2,2), np.around(mae,3), \
-        np.around(corrcoef,4), np.around(rmse_ext,4), np.around(rel_rmse_ext,4), np.around(precision_ext,3), np.around(recall_ext,3), np.around(f1_ext, 3)
+        np.around(corrcoef,4), np.around(rmse_ext,4), np.around(rel_rmse_ext,4), np.around(precision_ext,3), np.around(recall_ext,3), np.around(fbeta_ext, 3)
         
 def plot_ens_metrics(station, df_test, ax):
-    rmse, rel_rmse, NSE, r2, mae, corrcoef, rmse_ext, rel_rmse_ext, precision_ext, recall_ext, f1_ext = get_ens_class_metrics(station, df_test)
+    rmse, rel_rmse, NSE, r2, mae, corrcoef, rmse_ext, rel_rmse_ext, precision_ext, recall_ext, fbeta_ext = get_ens_class_metrics(station, df_test)
     
     # ax.set_title('Ensemble Metrics')
     # hide axes
@@ -120,13 +120,13 @@ def plot_ens_metrics(station, df_test, ax):
     ax.axis('off')
 
     row_labels=['Value']
-    col_labels=['RMSE', 'Rel_RMSE', 'NSE', 'R2', 'MAE', 'RMSE\nExtremes', 'Rel RMSE \n Extremes', 'Precision', 'Recall', 'F1'] 
-    table_vals=[[[rmse], [rel_rmse], [NSE], [r2], [mae], [rmse_ext], [rel_rmse_ext], [precision_ext], [recall_ext], [f1_ext]]]
-    table_vals=[[rmse, rel_rmse, NSE, r2, mae, rmse_ext, rel_rmse_ext, precision_ext, recall_ext, f1_ext]]
+    col_labels=['RMSE', 'Rel_RMSE', 'NSE', 'R2', 'MAE', 'RMSE\nExtremes', 'Rel RMSE \n Extremes', 'Precision', 'Recall', 'F_beta'] 
+    table_vals=[[[rmse], [rel_rmse], [NSE], [r2], [mae], [rmse_ext], [rel_rmse_ext], [precision_ext], [recall_ext], [fbeta_ext]]]
+    table_vals=[[rmse, rel_rmse, NSE, r2, mae, rmse_ext, rel_rmse_ext, precision_ext, recall_ext, fbeta_ext]]
     
     row_labels=['Value']
-    col_labels=['RMSE', 'Rel_RMSE', 'RMSE\nExtremes', 'Rel RMSE \n Extremes', 'Precision', 'Recall', 'F1'] 
-    table_vals=[[rmse, rel_rmse,rmse_ext, rel_rmse_ext, precision_ext, recall_ext, f1_ext]]
+    col_labels=['RMSE', 'Rel_RMSE', 'RMSE\nExtremes', 'Rel RMSE \n Extremes', 'Precision', 'Recall', 'F_beta'] 
+    table_vals=[[rmse, rel_rmse,rmse_ext, rel_rmse_ext, precision_ext, recall_ext, fbeta_ext]]
 
     colcolors = plt.cm.Blues([0.1] *  len(col_labels))
     rowcolors = plt.cm.Oranges([0.1] *  len(row_labels))

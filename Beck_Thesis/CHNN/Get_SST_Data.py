@@ -1,7 +1,6 @@
 '''
 Script to get Sea surface temperature for desired stations. Functions had to be broken up to be run on different computers because of GEE authentification
 '''
-# %%
 import ee
 import xarray as xr
 import numpy as np
@@ -87,6 +86,11 @@ def get_sst_data(station):
     
     # Convert to a pandas dataframe and convert to celsius
     sst_df = ee_array_to_df(station_sst, ['sea_surface_temperature'])
+    
+    if sst_df['sea_surface_temperature'].count() == 0:
+        print(f'No data for {station["Station"]}')
+        return
+    
     sst_df['sst'] =  kelvin_to_celsius(sst_df['sea_surface_temperature'])
     sst_df = sst_df[['datetime', 'sst']]
         
@@ -97,7 +101,7 @@ def get_sst_data(station):
     
     print('Writing')
     sst_ds.to_netcdf('Input_sst_data/' + station['Station'] + '_sst.nc') # Write to a new file
-    
+
 sst = (ee.ImageCollection('NOAA/CDR/SST_PATHFINDER/V53')
             .select('sea_surface_temperature'))
 
@@ -109,13 +113,18 @@ sst = (ee.ImageCollection('NOAA/CDR/SST_PATHFINDER/V53')
 #     add_sst_to_ds(station['Station'], station['Lon'], station['Lat'])
     
 stations2 = pd.read_csv('Coast_orientation/Selected_Stations_dates.csv').dropna().reset_index(drop=True)
+stations2['start_date'] = pd.to_datetime(stations2['start_date'])
+stations2['end_date'] = pd.to_datetime(stations2['end_date'])
+# stations2 = stations2[stations2['Coast'] == 'NE_Atlantic_Yellow']
 
 for index, station in stations2.iterrows():
-    print(f'Getting SST for Station: {station["Station"]}\n')
-    
+    print(f'\nGetting SST for Station: {station["Station"]}')
+    # if index == 0:
+    #     stat = station
     get_sst_data(station)
-    
+
+
 # REMOVE STATIONS WITHOUT DATA
-stations = pd.read_csv('Coast_orientation/Selected_Stations.csv')
-stations = stations[stations['Station'].isin(stations2['Station'])].reset_index(drop=True)
-stations.to_csv('Coast_orientation/Selected_Stations_w_Data.csv', index=False)
+# stations = pd.read_csv('Coast_orientation/Selected_Stations.csv')
+# stations = stations[stations['Station'].isin(stations2['Station'])].reset_index(drop=True)
+# stations.to_csv('Coast_orientation/Selected_Stations_w_Data.csv', index=False)

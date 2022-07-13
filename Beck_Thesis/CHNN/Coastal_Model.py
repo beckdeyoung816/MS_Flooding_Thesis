@@ -232,7 +232,7 @@ class Coastal_Model():
         if hyper_opt:
             my_callbacks.append(self.hyper_opt)
 
-        if self.ML == 'LSTM' or self.ML == 'TCN':
+        if self.ML in ['LSTM', 'TCN', 'TCN-LSTM']:
             shuffle = False #'batch'
         else:
             shuffle= True
