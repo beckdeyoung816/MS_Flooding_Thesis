@@ -241,8 +241,9 @@ class Coastal_Model():
         self.history = {}
         
         # Fit network sequentially on each station
-        num_stations = len(self.station_inputs)
-        for j, station in enumerate(self.station_inputs.values()):
+        train_stations = [station for station in self.station_inputs.values() if station.train_test == 'Train']
+        num_stations = len(train_stations)
+        for j, station in enumerate(train_stations):
             print(f'\nTraining Station ({j+1} of {num_stations}): {station.name}\n')
             # fit network
             if self.validation == 'split':

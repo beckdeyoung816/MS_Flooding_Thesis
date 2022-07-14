@@ -151,44 +151,52 @@ def store_result(inv_yhat, inv_y):
 
 def ensemble_handler(station, result_dict, station_name, neurons, epochs, batch, resample, tt_value, var_num,
                      out_dir, layers=1, ML='LSTM', test_on='ensemble', plot=True, save=False, loss='mae', i = 0):
+    
+    train = station.train_test == 'Train'
+    
     df_result = result_dict['data'][i].copy()
     df_result.rename(columns = {'Modelled': "Modelled_0"}, inplace = True)
-
-    df_train_loss = pd.DataFrame(result_dict['train_loss'][i].copy(), columns = [0])
-    df_test_loss = pd.DataFrame(result_dict['test_loss'][i].copy(), columns = [0])
-
-    for key in np.arange(1, len(result_dict['data']),1):
+    if train:
+        df_train_loss = pd.DataFrame(result_dict['train_loss'][i].copy(), columns = [0])
+        df_test_loss = pd.DataFrame(result_dict['test_loss'][i].copy(), columns = [0])
+    else:
+        df_train_loss, df_test_loss = None, None
+    for key in np.arange(1, len(result_dict['data']), 1):
         # print(key)
-        df_result = pd.concat([df_result, result_dict['data'][key].rename(columns={'Modelled':f"Modelled_{key}"}).loc[:,f"Modelled_{key}"]], axis = 1)    
-        df_train_loss = pd.concat([df_train_loss, pd.DataFrame(result_dict['train_loss'][key], columns = [key])], axis = 1, ignore_index=True)      
-        df_test_loss = pd.concat([df_test_loss, pd.DataFrame(result_dict['test_loss'][key], columns = [key])], axis = 1, ignore_index=True)    
+        df_result = pd.concat([df_result, result_dict['data'][key].rename(columns={'Modelled':f"Modelled_{key}"}).loc[:,f"Modelled_{key}"]], axis = 1)
+        if train:    
+            df_train_loss = pd.concat([df_train_loss, pd.DataFrame(result_dict['train_loss'][key], columns = [key])], axis = 1, ignore_index=True)      
+            df_test_loss = pd.concat([df_test_loss, pd.DataFrame(result_dict['test_loss'][key], columns = [key])], axis = 1, ignore_index=True)    
 
-    cols = [f'Modelled_{col_name}' for col_name in df_train_loss.columns] 
-    df_train_loss.columns = cols
-    df_test_loss.columns = cols
+
 
     df_modelled = df_result.drop('Observed', axis = 1)
     df_result['max'] = df_modelled.max(axis = 1)
     df_result['min'] = df_modelled.min(axis = 1)
     df_result['median'] = df_modelled.median(axis = 1) 
     
-    df_train_loss['max'] = df_train_loss.max(axis = 1)
-    df_train_loss['min'] = df_train_loss.min(axis = 1)
-    
-    df_test_loss['max'] = df_test_loss.max(axis = 1)
-    df_test_loss['min'] = df_test_loss.min(axis = 1)
+    if train:
+        cols = [f'Modelled_{col_name}' for col_name in df_train_loss.columns] 
+        df_train_loss.columns = cols
+        df_test_loss.columns = cols
+        
+        df_train_loss['max'] = df_train_loss.max(axis = 1)
+        df_train_loss['min'] = df_train_loss.min(axis = 1)
+        
+        df_test_loss['max'] = df_test_loss.max(axis = 1)
+        df_test_loss['min'] = df_test_loss.min(axis = 1)
     
     if save == True:
         os.makedirs(os.path.join(out_dir, 'Data'), exist_ok=True)
         
         fn = f'{station_name}_{ML}_{loss}_prediction.csv'       
         df_result.to_csv(os.path.join(out_dir, 'Data', fn))
-        
-        fn = f'{station_name}_{ML}_{loss}_training.csv'
-        df_train_loss.to_csv(os.path.join(out_dir, 'Data',fn))
-        
-        fn = f'{station_name}_{ML}_{loss}_testing.csv'
-        df_test_loss.to_csv(os.path.join(out_dir, 'Data', fn))
+        if train:
+            fn = f'{station_name}_{ML}_{loss}_training.csv'
+            df_train_loss.to_csv(os.path.join(out_dir, 'Data',fn))
+            
+            fn = f'{station_name}_{ML}_{loss}_testing.csv'
+            df_test_loss.to_csv(os.path.join(out_dir, 'Data', fn))
     
     if plot == True:
         plot_ensemble_performance(station, df_result, df_train_loss, df_test_loss, station_name, neurons, epochs, batch, resample,
@@ -234,7 +242,8 @@ def plot_ensemble_performance(station, df, train_loss, test_loss, station_name, 
     plot_ensemble_metrics(df.dropna(axis=0, how='any'), fig.add_subplot(gs[2:4, 4:]))
     plot_ensemble_scatter(df[['Observed', 'median']], fig.add_subplot(gs[4:6, :2]))
     plot_ensemble_qq(df.dropna(axis=0, how='any'), fig.add_subplot(gs[4:6, 2:4]))
-    plot_ensemble_loss(train_loss, test_loss, fig.add_subplot(gs[4:6, 4:]))
+    if station.train_test == 'Train':
+        plot_ensemble_loss(train_loss, test_loss, fig.add_subplot(gs[4:6, 4:]))
     plot_ens_metrics(station, df.dropna(axis=0, how='any'), fig.add_subplot(gs[6:, 1:5]))
 
     fig.suptitle(station_name, fontsize=32)
@@ -1426,7 +1435,7 @@ def table_var_test():
 
     date_parser = lambda x: datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S")
     metric = pd.DataFrame(index=station_list, data=None)
-    df_loc = pd.read_excel(os.path.join('Coast_orientation', 'stations.xlsx'))
+    df_loc = pd.read_excel(os.path.join('Stations', 'stations.xlsx'))
     df_loc = df_loc.set_index('Station')
     metric_tmp = metric.merge(df_loc[['Lat', 'Lon']], how='left', left_index=True, right_index=True)
     # station_list = ['puerto_armuelles_b-304b-panama-uhslc', 'cuxhaven-825a-germany-uhslc',

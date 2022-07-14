@@ -7,7 +7,7 @@ from sklearn.metrics import precision_score, recall_score, fbeta_score
 
 class Station():
     
-    def __init__(self, station_name, train_X, train_Y, test_X, test_Y, val_X, val_Y, scaler, df, reframed_df, n_train_final, test_dates, test_year):
+    def __init__(self, station_name, train_test, train_X, train_Y, test_X, test_Y, val_X, val_Y, scaler, df, reframed_df, n_train_final, test_dates, test_year):
         self.train_X = train_X
         self.name = station_name
         self.train_y = train_Y
@@ -21,6 +21,7 @@ class Station():
         self.n_train_final = n_train_final
         self.test_dates = test_dates
         self.test_year = test_year
+        self.train_test = train_test
         
         # Initialize Storage of results
         self.result_all = dict()
@@ -33,7 +34,7 @@ class Station():
         self.result_all['rel_rmse_ext'] = dict()
         self.result_all['precision_ext'] = dict()
         self.result_all['recall_ext'] = dict()
-        self.result_all['f1_ext'] = dict()
+        self.result_all['fbeta_ext'] = dict()
         
     def predict(self, model, ensemble_loop, mask_val):
         

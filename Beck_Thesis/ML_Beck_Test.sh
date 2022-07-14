@@ -7,4 +7,4 @@
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate beck_env
 
-python -W ignore ML_env_Coast.py 'NE_Atlantic_Yellow' 'ANN' 'mse'
+python -W ignore ML_env_Coast.py 'NE Atlantic 1' 'ANN' 'mse'

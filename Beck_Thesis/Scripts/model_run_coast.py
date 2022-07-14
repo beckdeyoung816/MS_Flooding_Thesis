@@ -12,11 +12,11 @@ import xarray as xr
 import random as rand
 
 import sys
-sys.path.append(os.path.join(sys.path[0], r'./CHNN/'))
+sys.path.append(os.path.join(sys.path[0], r'./Scripts/'))
 
-from CHNN import to_learning, performance
-from CHNN.Coastal_Model import Coastal_Model
-from CHNN.station import Station
+from Scripts import to_learning, performance
+from Scripts.Coastal_Model import Coastal_Model
+from Scripts.station import Station
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -68,7 +68,7 @@ def set_logger(arg_start, arg_end, verbose=True):
 
     return logger, ch
 
-def get_input_data(station, variables, ML, input_dir, resample, resample_method, batch,
+def get_input_data(station, train_test, variables, ML, input_dir, resample, resample_method, batch,
                    scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold,
                    logger):
     print(f'\nGetting Input Data for {station}\n')
@@ -106,17 +106,22 @@ def get_input_data(station, variables, ML, input_dir, resample, resample_method,
     # print(f'Val y Shape: {val_y.shape}')
     
 
-    return Station(station, train_X, train_y, test_X, test_y, val_X, val_y, scaler, df, reframed, 0, i_test_dates, test_year)
+    return Station(station, train_test, train_X, train_y, test_X, test_y, val_X, val_y, scaler, df, reframed, 0, i_test_dates, test_year)
 
 
 def get_coast_stations(coast):
-    station_data = pd.read_csv('Coast_orientation/Selected_Stations_w_Data.csv').dropna().reset_index(drop=True)
-    return station_data['Station'][station_data['Coast'] == coast].to_list()
+    station_data = pd.read_csv('Stations/Selected_Stations_w_Data.csv').dropna().reset_index(drop=True)
+    coast_stations = station_data[station_data['Coast'] == coast]
+    train_stations = coast_stations['Station'][coast_stations['Train_test'] == 'Train'].tolist()
+    test_stations = coast_stations['Station'][coast_stations['Train_test'] == 'Test'].tolist()
+    print(f'Train Stations: {train_stations}')
+    print(f'Test Stations: {test_stations}')
+    return train_stations, test_stations
 
 def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_method, scaler_type,
              batch, n_layers, neurons, filters, dropout, drop_value, activation, optimizer,
              batch_normalization, loss, epochs, loop=5, n_ncells=2, l1=0.00, l2=0.01, frac_ens=0.5, logger=False, complexity=False,
-             year='last', fn_exp='Models', arg_count=0, verbose=2, mask_val=-999, hyper_opt=False, NaN_threshold=0, validation='split'):
+             year='last', fn_exp='Models', arg_count=0, verbose=2, mask_val=-999, hyper_opt=False, NaN_threshold=0, validation='split', gamma=1.1):
 
     start1 = time.time()
     if ML.lower() == 'all':
@@ -146,12 +151,13 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
         
         # Get input data for each station
         stations = {}
-        station_names = get_coast_stations(coast)
-        rand.shuffle(station_names)
-        for station in station_names:# [:2]:
+        train_stations, test_stations = get_coast_stations(coast)
+        rand.shuffle(train_stations) # Randomize order of training stations
+        for station in train_stations + test_stations:# [:2]:
             # Get input data for the station
             # This includes the train, test, and validation data, as well as the scaler and transformed data for inverse transforming
-            input = get_input_data(station, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger)
+            train_test = 'Train' if station in train_stations else 'Test'
+            input = get_input_data(station, train_test, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger)
             if input is not None:
                 stations[station] = input
                                         
@@ -167,7 +173,7 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
             model = Coastal_Model(stations, ML, loss, n_layers, neurons, activation, dropout, drop_value,
                                       hyper_opt, validation, optimizer, epochs, batch, verbose, model_dir, filters,
                                       variables, batch_normalization, sherpa_output, logger, name_model,
-                                      alpha=None, s=None, gamma=10, l1=l1, l2=l2, mask_val=mask_val)
+                                      alpha=None, s=None, gamma=gamma, l1=l1, l2=l2, mask_val=mask_val)
                              
             
             model.design_network()
@@ -191,9 +197,16 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
                                                                             batch, resample, tt_value, len(variables), 
                                                                             model_dir, layers=n_layers, ML=ML, 
                                                                             test_on='ensemble', plot=True, save=True, loss=loss)
-            coast_results = performance.get_coastline_results(model.station_inputs.values())
-            print(coast_results)
-            coast_results.to_csv(os.path.join(model_dir, f'Data/coast_results_{ML}_{loss}.csv'))
+            
+            all_stations = model.station_inputs.values()
+            coast_train_results = performance.get_coastline_results([station for station in all_stations if station.train_test == 'Train'])
+            coast_test_results = performance.get_coastline_results([station for station in all_stations if station.train_test == 'Test'])
+            print(f'\nCoastline train results:\n {coast_train_results}')
+            print(f'\n\nCoastline test results:\n {coast_test_results}')
+            
+            os.makedirs(os.path.join(model_dir, 'Results'), exist_ok=True)
+            coast_train_results.to_csv(os.path.join(model_dir, f'Results/train_coast_results_{ML}_{loss}.csv'))
+            coast_test_results.to_csv(os.path.join(model_dir, f'Results/test_coast_results_{ML}_{loss}.csv'))
             
         if logger:
             logger.info(f'{arg_count}: {ML} - {coast} - {round((time.time() - start2) / 60, 2)} min')
@@ -271,7 +284,7 @@ def post_process_global():
     
     date_parser = lambda x: datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S")
     metric = pd.DataFrame(index=station_list, data=None)
-    df_loc = pd.read_excel(os.path.join('Coast_orientation', 'stations.xlsx'))
+    df_loc = pd.read_excel(os.path.join('Stations', 'stations.xlsx'))
     df_loc = df_loc.set_index('Station')
     metric = metric.merge(df_loc[['Lat', 'Lon']], how='left', left_index=True, right_index=True)
     

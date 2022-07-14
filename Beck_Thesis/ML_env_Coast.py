@@ -3,7 +3,7 @@ import os
 import sys
 
 # os.chdir('./Beck_Thesis/')
-from CHNN.model_run_coast import ensemble, set_logger
+from Scripts.model_run_coast import ensemble, set_logger
 
 # parameters and variables
 coast = sys.argv[1]
@@ -30,13 +30,14 @@ l1, l2 = 0, 0.01
 
 model_dir = os.path.join(os.getcwd(), 'Models')
 name_model = f'{coast}_{ML}_{loss}'
-input_dir = 'Input_nc_sst' # 'Input_nc_detrend_sst'
+input_dir = 'Input_nc_detrend_sst' # 'Input_nc_detrend_sst'
 output_dir = 'Models'
 figures_dir = 'Figures'
 year = 'last'
 frac_ens = 0.5
 
 loop = 2
+gamma = 1.2
 
 logger, ch = set_logger(loop, n_ncells)
 
@@ -46,4 +47,4 @@ print('*************************************************************************
 
 ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_method, scaler,
              batch, n_layers, neurons, filters, dropout, drop_value, activation, optimizer,
-             batch_normalization, loss, epochs, loop, n_ncells, l1, l2, frac_ens, logger, verbose = 0, validation = 'select')
+             batch_normalization, loss, epochs, loop, n_ncells, l1, l2, frac_ens, logger, verbose = 0, validation = 'select', gamma=gamma)

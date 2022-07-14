@@ -12,7 +12,8 @@ library(tmap)
 
 ```{r}
 stations <- read_csv('Selected_stations_w_Data.csv') %>% 
-  dplyr::select(Coast, station = Station, lat = Lat, lon = Lon)
+  dplyr::select(Coast, station = Station, lat = Lat, lon = Lon, Train_test) %>% 
+  drop_na()
 stations_sf <- stations %>% st_as_sf(coords = c("lon", "lat"), crs = 4326)
 ```
 
@@ -27,6 +28,89 @@ tmp <- world$geom[world$name_long == 'Norway'] %>%
 
 world$geom[world$name_long == 'Norway'] <- tmp[4]
 ```
+
+
+```{r}
+map_regions <- data.frame(
+  # Coast Name
+  coast = c("NE_Atlantic_1",
+            "NE_Atlantic_2",
+            "NE_Pacific", 
+            "Japan"),
+  # Filtering condition for countries on the maps
+  loc = c(rep('subregion %in% c("Western Europe", "Northern Europe", "Eastern Europe") & 
+              !name_long %in% c("Russian Federation", "Iceland")', 2),
+          'iso_a2 %in% c("US", "CA")',
+          'name_long == "Japan"'))
+
+maps <- NULL
+
+create_map <- function(i){
+  coast <- map_regions$coast[i]
+  locs <- map_regions$loc[i]
+  
+  if (coast == 'NE_Pacific') {
+    num_pos <- c("left", "bottom")} else
+    {num_pos <- c("left", "top")}
+  
+  stations <- stations_sf %>% filter(Coast == coast) %>% rename("Use" = Train_test)
+  
+  num_stations <- nrow(stations)
+  num_train <- nrow(stations %>% filter(`Use` == 'Train'))
+  num_test <- nrow(stations %>% filter(`Use` == 'Test'))
+  
+  map <- world %>% 
+    filter(!!rlang::parse_expr(locs)) %>% 
+    tm_shape() + tm_borders() + tm_fill(col = "gray") + # Country Borders
+    tm_shape(stations) + tm_dots(col='Use', size = .1, palette = c("blue", 'red')) + # Station Points 
+    
+    # Number of stations
+    tm_credits(glue::glue('Num Training: {num_train} \n Num  Testing: {num_test}'),
+               position=num_pos,
+               fontface = 'bold',
+               fontfamily = 'mono') + 
+    # Layout
+    tm_layout(legend.show = F,
+              main.title = gsub('_', " ", coast), 
+              main.title.position = "center" ,
+              main.title.fontface = 'bold',
+              main.title.fontfamily = "mono",
+              bg.color = "lightcyan") 
+  
+  if (i == 4){ # Add legend for last plot
+    map <- map + tm_layout(legend.show = T,
+                          legend.frame = T,
+                          legend.position = c("right", "bottom"),
+                          legend.bg.alpha = 1,
+                          legend.text.fontface = 'bold',
+                          legend.title.fontface = 'bold',
+                          legend.title.fontfamily = "mono",
+                          legend.text.fontfamily = "mono")
+    
+  }
+    map
+  
+}
+
+maps <- purrr::map(1:4, create_map)
+
+
+tm <- tmap_arrange(maps[[1]], maps[[2]], maps[[3]], maps[[4]], outer.margins = 0, ncol = 2)
+tm
+
+```
+
+```{r }
+tmap_save(tm, 'Selected_Stations_Map.png')
+```
+
+
+
+
+# TESTING
+
+
+
 
 ```{r}
 map_regions <- data.frame(coast = c("NE Atlantic",
@@ -84,55 +168,6 @@ tmap_save(tm, 'Selected_Stations_Map.png')
 tm
 ```
 
-
-```{r}
-map_regions <- data.frame(coast = c("NE Atlantic 1",
-                                    "NE Atlantic 2",
-                                    "NE Pacific", 
-                                    "Japan"),
-                          loc = c(rep('subregion %in% c("Western Europe", 
-                                  "Northern Europe", 
-                                  "Eastern Europe") & !name_long %in%  c("Russian Federation", "Iceland")', 2),
-                                  'iso_a2 %in% c("US", "CA")',
-                                  'name_long == "Japan"'))
-
-
-maps <- NULL
-
-create_map <- function(i){
-  coast = map_regions$coast[i]
-  locs = map_regions$loc[i]
-  leg = map_regions$leg[i]
-  
-  stations <- stations_sf %>% filter(Coast == coast)
-  num_stations <- nrow(stations)
-    world %>% 
-    filter(!!rlang::parse_expr(locs)) %>% 
-    tm_shape() + tm_borders() + tm_fill(col = "gray") +
-    tm_shape(stations, position=c("left", "bottom")) + 
-    tm_dots(col='Coast', size = .1, palette = 'red')  + 
-    tm_credits(glue::glue('Num Stations: {num_stations}'),
-               position=c("left", "top"),
-               fontface = 'bold') + 
-    tm_layout(legend.show = F,
-              main.title = coast, 
-              main.title.position = "center" ,
-              main.title.fontface = 'bold',
-              bg.color = "lightcyan") 
-  
-}
-
-maps <- purrr::map(1:4, create_map)
-
-
-tm <- tmap_arrange(maps[[1]], maps[[2]], maps[[3]], maps[[4]], outer.margins = 0, ncol = 2)
-tm
-
-```
-
-```{r }
-tmap_save(tm, 'Selected_Stations_Map.png')
-```
 
 ```{r }
 #tm_facets('continent') + 

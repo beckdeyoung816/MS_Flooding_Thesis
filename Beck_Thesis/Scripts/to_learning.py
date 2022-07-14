@@ -148,7 +148,7 @@ def load_file(station, input_dir):
         # sys.exit('Station name not found!')
     filename = os.path.join(input_dir, station_name + '.nc')
 
-    df_dir = pd.read_excel(os.path.join('Coast_orientation', 'stations.xlsx'))
+    df_dir = pd.read_excel(os.path.join('Stations', 'stations.xlsx'))
     # direction = df_dir['Direction'][df_dir['Station'] ==  station_name].values[0]
     direction = 'N'
 
