@@ -8,8 +8,6 @@ Then compiling and training the model.
 import keras
 from keras import layers
 from keras import models
-from keras.backend import sigmoid
-from keras import utils
 from keras.callbacks import EarlyStopping, TensorBoard, ModelCheckpoint, ProgbarLogger
 import os
 
@@ -30,32 +28,11 @@ def reset_seeds():
     else:
         tf.set_random_seed(3)
     print("RANDOM SEEDS RESET")
-
-
-def swish_func(x, beta = 1):
-    return (x * sigmoid(beta * x))
-
-
-def relu_advanced_func(x, threshold = -3):
-    return keras.activations.relu(x, threshold=threshold)
-
-
-class swish(layers.Activation):
-    def __init__(self, activation, **kwargs):
-        super(swish, self).__init__(activation, **kwargs)
-        self.__name__ = 'swish'
-
-
-class relu_advanced(layers.Activation):
-    def __init__(self, activation, **kwargs):
-        super(relu_advanced, self).__init__(activation, **kwargs)
-        self.__name__ = 'relu_advanced'
-
 class Coastal_Model():
     def __init__(self, station_inputs, ML, loss, n_layers, neurons, activation, dropout, drop_value, 
                  hyper_opt, validation, optimizer, epochs, batch, verbose, model_dir, filters, 
                  variables, batch_normalization, sherpa_output, logger, name_model,
-                 alpha=13, s=1.7, gamma=1.1, l1=0.01, l2=0.01, mask_val=-999):
+                 alpha=13, s=1.7, gamma=1.1, l1=0.01, l2=0.01, mask_val=-999, n_ncells=0):
         
         # Model parameters
         self.ML = ML
@@ -96,6 +73,7 @@ class Coastal_Model():
         self.vars = variables
         self.sherpa_output = sherpa_output
         self.logger = logger
+        self.n_ncells = n_ncells
     
     
     
@@ -120,7 +98,10 @@ class Coastal_Model():
         Design an LSTM model
         """
         # Time steps, num features
-        input_shape = (1, len(self.vars))
+        if self.n_ncells == 0:
+            input_shape = (1, len(self.vars))
+        elif self.n_ncells == 2:
+            input_shape = (1, len(self.vars) * 5 * 5)
 
         model = models.Sequential()
         for i in range(self.n_layers):
@@ -144,10 +125,13 @@ class Coastal_Model():
         Design a TCN model
         """
         # Time steps, num features
-        input_shape = (1, len(self.vars))
+        if self.n_ncells == 0:
+            input_shape = (1, len(self.vars))
+        elif self.n_ncells == 2:
+            input_shape = (1, len(self.vars) * 5 * 5)
         
         model = models.Sequential()
-        for i in range(self.n_layers):
+        for i in range(self.n_layers-lstm):
             rs = i < self.n_layers-1 or lstm # Only return sequences if another TCN layer is coming and no LSTM layer is added
             if i == 0: # Specify the input shape for the first layer
                 model.add(tcn.TCN(self.neurons, input_shape=input_shape, activation='relu', return_sequences=rs,
@@ -170,15 +154,6 @@ class Coastal_Model():
         Design desired network type based on the ML parameter
         """
         
-        # design Network
-            
-        # if self.activ == 'swish':
-        #     utils.generic_utils.get_custom_objects().update({'swish': swish(swish_func)})
-
-        # if self.activ == 'relu':
-        #     self.activ = 'relu_advanced'
-        #     utils.generic_utils.get_custom_objects().update({'relu_advanced': relu_advanced(relu_advanced_func)})
-        
         if self.ML == 'ANN':
             self.ANN_model()
         elif self.ML == 'LSTM':
@@ -190,11 +165,15 @@ class Coastal_Model():
             
             
     def compile(self):
+        """Compile model using desired loss function and optimized
+        """
         self.model.compile(loss=self.custom_loss_fn, optimizer=self.optimizer)
         self.model.summary()
         
     
     def gumbel_loss_hyper(self, gamma=1.1):
+        """Loss function based on the gumbel distribution
+        """
         def gumbel_loss(y_true, y_pred):
             u = y_pred - y_true
             
@@ -223,9 +202,9 @@ class Coastal_Model():
         
         return frechet_loss_fn
     
-    def train_model(self, i, hyper_opt=False):
+    def train_model(self, ensemble_loop, hyper_opt=False):
             
-        my_callbacks = [EarlyStopping(monitor='val_loss', min_delta=0, patience=3, mode="auto", restore_best_weights = 'True'),
+        my_callbacks = [EarlyStopping(monitor='val_loss', min_delta=0, patience=5, mode="auto", restore_best_weights = 'True'),
                         ModelCheckpoint(filepath=os.path.join(self.model_dir, self.name_model), monitor='val_loss', save_best_only=True, save_weights_only=False, mode='auto', period=1)] # ProgbarLogger(count_mode="steps", stateful_metrics=None), , ModelCheckpoint(filepath=os.path.join(model_dir, name_model), monitor='loss', save_best_only=True, save_weights_only=False, mode='auto', period=1),
         # my_callbacks = [ModelCheckpoint(filepath=os.path.join(model_dir, name_model), monitor='val_loss', save_best_only=True, save_weights_only=False, mode='auto', period=1)]
         
@@ -237,7 +216,7 @@ class Coastal_Model():
         else:
             shuffle= True
             
-        
+        # Initlaize storage of model history for all staitons
         self.history = {}
         
         # Fit network sequentially on each station
@@ -245,6 +224,7 @@ class Coastal_Model():
         num_stations = len(train_stations)
         for j, station in enumerate(train_stations):
             print(f'\nTraining Station ({j+1} of {num_stations}): {station.name}\n')
+            
             # fit network
             if self.validation == 'split':
                 self.history[station.name] = self.model.fit(station.train_X, station.train_y, epochs=self.epochs, batch_size=self.batch_size, 
@@ -255,12 +235,20 @@ class Coastal_Model():
             else:
                 raise ValueError('Validation must be either "split" or "select"')
             
-            station.result_all['train_loss'][i] = self.history[station.name].history['loss']
-            station.result_all['test_loss'][i] = self.history[station.name].history['val_loss']
+            # Store loss curves
+            station.result_all['train_loss'][ensemble_loop] = self.history[station.name].history['loss']
+            station.result_all['test_loss'][ensemble_loop] = self.history[station.name].history['val_loss']
 
         self.model.save(os.path.join(self.model_dir, self.name_model), include_optimizer=True, overwrite=True)
+        
+    def predict(self, ensemble_loop):
+        """Predict for each station
+        """
 
-    
+        for station in self.station_inputs.values():
+            print(f'\nPredicting station: {station.name}\n')
+            station.predict(self.model, ensemble_loop, self.mask_val)
+
     def hyper_opt(self):
         # setup sherpa object
         if self.ML == 'LSTM':
@@ -310,10 +298,6 @@ class Coastal_Model():
         # sherpa.Study.load_dashboard(".")
         # ssh -L 8000:localhost:8880 timothyt@cartesius.surfsara.nl
         
-    def predict(self, ensemble_loop):
-        # Predict for each station
-        for station in self.station_inputs.values():
-            print(f'\nPredicting station: {station.name}\n')
-            station.predict(self.model, ensemble_loop, self.mask_val)
+
 
 

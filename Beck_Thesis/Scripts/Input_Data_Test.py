@@ -124,7 +124,7 @@ l1, l2 = 0, 0.01
 ML = 'ANN'  # 'LSTM', 'CNN', 'ConvLSTM', 'ANN', 'ALL', 'LSTM_TCN'
 model_dir = os.path.join(os.getcwd(), 'Models')
 name_model = '{}_surge_ERA5'.format(ML)
-input_dir = 'Input_nc_sst'
+input_dir = 'Input_nc_sst_detrend'
 output_dir = 'ML_model'
 figures_dir = 'Figures'
 year = 'last'
@@ -682,7 +682,7 @@ model = cm.Coastal_Model(stations, ML, loss, n_layers, neurons, activation, drop
 for i in range(2):
     model.design_network()
     model.compile()
-    model.train_model(i=i)
+    model.train_model(ensemble_loop=i)
     model.predict(i)
 # %%
 station = model.station_inputs['calais-calais-france-refmar']

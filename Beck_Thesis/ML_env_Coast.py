@@ -15,7 +15,7 @@ resample_method = 'rolling_mean'  # 'max' 'res_max' 'rolling_mean' ## res_max fo
 variables = ['msl', 'grad', 'u10', 'v10', 'rho', 'sst']  # 'grad', 'rho', 'phi', 'u10', 'v10', 'uquad', 'vquad'
 tt_value = 0.67  # train-test value
 scaler = 'std_normal'  # std_normal, MinMax
-n_ncells = 0
+n_ncells = 2 # 2 = 5x5, 3=7x7
 epochs = 5
 batch = 10
 batch_normalization = False
@@ -48,3 +48,8 @@ print('*************************************************************************
 ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_method, scaler,
              batch, n_layers, neurons, filters, dropout, drop_value, activation, optimizer,
              batch_normalization, loss, epochs, loop, n_ncells, l1, l2, frac_ens, logger, verbose = 0, validation = 'select', gamma=gamma)
+
+
+
+# write a function that runs the ensemble and saves the results in a file
+

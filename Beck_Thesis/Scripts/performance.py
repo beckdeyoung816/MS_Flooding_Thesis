@@ -215,21 +215,6 @@ def plot_ensemble_performance(station, df, train_loss, test_loss, station_name, 
         fig = plt.figure(figsize=[14.5, 9.5])
     else:
         fig = plt.figure(figsize=[14.5, 9.5])
-
-    # gs = GridSpec(4, 3)
-
-    # plot_ensemble_testing_ts(df, fig.add_subplot(gs[0, 0:2]))
-    # plot_ensemble_testing_max_ts(df, fig.add_subplot(gs[1, 0:2]), resample)
-    # plot_meta(fig.add_subplot(gs[0, 2]), station, neurons, epochs, batch, resample, tt_value, var_num)    
-    # plot_ensemble_metrics(df.dropna(axis=0, how='any'), fig.add_subplot(gs[1, 2]))
-    # #plot_ens_metrics(df.dropna(axis=0, how='any'), fig.add_subplot(gs[1, 2]))
-    # plot_ensemble_scatter(df[['Observed', 'median']], fig.add_subplot(gs[2, 0]))
-    # plot_ensemble_qq(df.dropna(axis=0, how='any'), fig.add_subplot(gs[2, 1]))
-    # plot_ensemble_loss(train_loss, test_loss, fig.add_subplot(gs[2, 2]))
-    # plot_ens_metrics(df.dropna(axis=0, how='any'), fig.add_subplot(gs[3, :]))
-
-    # fig.suptitle(station, fontsize=32)
-    # plt.tight_layout(rect=[0, 0, 1, 0.95]) # [left, bottom, right, top]
     
     
     fig = plt.figure(figsize=[15, 15])

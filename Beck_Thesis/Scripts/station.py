@@ -1,9 +1,8 @@
 import pandas as pd
 import numpy as np
 from sklearn.metrics import mean_squared_error as mse
-import performance
-import matplotlib.pyplot as plt
 from sklearn.metrics import precision_score, recall_score, fbeta_score
+import performance
 
 class Station():
     
@@ -37,9 +36,10 @@ class Station():
         self.result_all['fbeta_ext'] = dict()
         
     def predict(self, model, ensemble_loop, mask_val):
+        """Make predictions for a given station
+        """
         
-        # print(f'\nPredicting for {self.name}\n')
-        
+        # Replace masking values
         temp_df = self.test_year.replace(to_replace=mask_val, value=np.nan)[self.n_train_final:].copy()
 
         # make a prediction
@@ -52,20 +52,17 @@ class Station():
         temp_df.loc[:,'values(t)'] = self.test_preds
         self.inv_test_preds = self.scaler.inverse_transform(temp_df.values)[:,-1]
         
-        self.evaluate_model(ensemble_loop) # Get evaluation metrics
+         # Get evaluation metrics
+        self.evaluate_model(ensemble_loop)
         
     def evaluate_model(self, ensemble_loop):
-        
-        # print('Station Level Evaluation')
-        # print('-----------------------')
-        # Calculating RMSE
+        """Get evaluation metrics for model predictions. RMSE, Rel_RMSE, Precision, Recall, FBeta.
+        """
+        # RMSE
         self.rmse = np.sqrt(mse(self.inv_test_y, self.inv_test_preds))
         self.rel_rmse = self.rmse/np.mean(self.inv_test_y)
-        # print(f'RMSE: {self.rmse: .2f}\n')
-        # print(f'Relative RMSE: {self.rel_rmse: .2f}\n')
         
-         # Calculating RMSE for Extremes
-         
+        # Get the values that are deemed as extremes
         extremes = (pd.DataFrame(self.inv_test_y)
                     .nlargest(round(.10*len(self.inv_test_y)), 0) # Largest 10%
                     .sort_index())
@@ -74,15 +71,14 @@ class Station():
                             
         self.inv_test_y_ext = self.inv_test_y[extremes_indices]
         self.inv_test_preds_ext = self.inv_test_preds[extremes_indices]
-
+        
+        # RMSE for Extremes
         self.rmse_ext = np.sqrt(mse(self.inv_test_y_ext, self.inv_test_preds_ext))
         self.rel_rmse_ext = self.rmse_ext / self.inv_test_y.mean()
         
-        # print(f'\nRMSE Extremes: {self.rmse_ext: .2f}\n')
-        # print(f'Relative RMSE Extremes: {self.rel_rmse_ext: .2f}\n')
+        # Precision and recall and fbeta score for extremes
         
-        # Precision and recall and f1 score for extremes
-        
+        # Turn into binary classification
         ext_df = pd.DataFrame([self.inv_test_y, self.inv_test_preds], index = ['Obs', 'Pred']).T
         ext_df['Extreme_obs'] = ext_df['Obs'] >= min_ext
         ext_df['Extreme_pred'] = ext_df['Pred'] >= min_ext
@@ -90,10 +86,6 @@ class Station():
         self.precision_ext = precision_score(ext_df['Extreme_obs'], ext_df['Extreme_pred'])
         self.recall_ext = recall_score(ext_df['Extreme_obs'], ext_df['Extreme_pred'])
         self.fbeta_ext = fbeta_score(ext_df['Extreme_obs'], ext_df['Extreme_pred'], beta=2)
-        
-        # print(f'\nPrecision Extremes: {self.precision_ext: .2f}\n')
-        # print(f'Recall Extremes: {self.recall_ext: .2f}\n')
-        # print(f'F1 Extremes: {self.f1_ext: .2f}\n')
         
         # Store Results
         df_all = performance.store_result(self.inv_test_preds, self.inv_test_y)
