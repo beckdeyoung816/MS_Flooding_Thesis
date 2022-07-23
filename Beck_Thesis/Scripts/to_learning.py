@@ -504,8 +504,12 @@ def prepare_station(station, variables, ML, input_dir, resample, resample_method
     else:
         selected_dates = []
 
-    df, lat_list, lon_list = spatial_to_column(df, ds, variables, selected_dates, n_ncells)
-    # print('df to spatial done')    
+    
+    if n_ncells > 1:
+        df, lat_list, lon_list = normalize_coast_orientation(ds, direction, variables, n_ncells)
+    else:
+        df, lat_list, lon_list = spatial_to_column(df, ds, variables, selected_dates, n_ncells)
+        # print('df to spatial done')    
 
     # Drop missing values
     df.dropna(inplace=True)
@@ -538,3 +542,66 @@ def splitting_learning(reframed, df, tt_value, ML, variables, direction, lat_lis
     train_X, train_y, test_X, test_y, n_train = split_tt(reframed, ML, tt_value, n_train)
 
     return train_X, train_y, test_X, test_y, n_train
+
+
+def normalize_coast_orientation(ds, direction, variables, n_ncells):
+    
+    # Identify desired lats and lons
+    middle = int(len(ds.longitude)/2)
+    lon_list = ds.longitude.values[middle - n_ncells: middle + n_ncells + 1]
+    lat_list = ds.latitude.values[middle - n_ncells: middle + n_ncells + 1]
+    
+    # Turn xarray into pandas dataframe and select desired variables
+    ds_df = ds.to_dataframe().reset_index().get(['residual'] + variables)
+    
+    # Pivot dataframe to get a unique column for each latitude longitude and variable
+    df = ds_df.pivot(index='time', columns = ['latitude', 'longitude'])
+    
+    # Rename columns from multiindex to single index of the form: 'variable_latitude_longitude'
+    df.columns = ['_'.join(map(str, col_list)) for col_list in df.columns.values]
+    
+    # We only want one column for residual and sst since they are not space dependent
+    # Thus we want to remove the redundant columns in the dataframe
+    def remove_excess_lat_lon_columns(df, var):
+        # Get all columns with the variable name
+        cols = df.columns[df.columns.str.startswith(var)] 
+        
+        # Set the variable column to the first column with the variable name
+        # So a unique 'residual' column is created and the redundant columns are removed
+        df[var] = df[cols[0]] 
+        df.drop(cols, axis=1, inplace=True)
+        
+        return df
+
+    # Here we also establish the start of the new column ordering
+    # The column ordering is the important aspect of the coastline orientation normalization
+    # This is because the models do not inherently look for spatial relationships but they can learn them if their relative variable positioning is the same
+    new_col_order = ['residual']
+    df = remove_excess_lat_lon_columns(df, 'residual')
+    
+    # Only remove sst if it is a desired variable
+    if 'sst' in variables:
+        df = remove_excess_lat_lon_columns(df, 'sst')
+        new_col_order.append('sst') # Add sst to the new column ordering
+        
+        
+    # Make a matrix where each element in a latitutde longitude tuple 
+    # This matrix looks like a spatial box 
+    lat_lon_matrix = [[f'{lat}_{lon}' for lon in lon_list] for lat in lat_list] 
+    
+    # We rotate this spatial box to "face" north
+    if direction == 'E':
+        lat_lon_matrix = np.rot90(lat_lon_matrix, k=1, axes=(0,1))
+    elif direction == 'W':
+        lat_lon_matrix = np.rot90(lat_lon_matrix, k=3, axes=(0,1))
+    elif direction == 'S':
+        lat_lon_matrix = np.rot90(lat_lon_matrix, k=2, axes=(0,1))
+        
+    # Now that the spatial box is facing north, the relative positioning of each latitude and longitude is consistent across all stations
+    # Thus now we can reorder the columns in the dataframe to match the new consistent column ordering that adheres by the coastal orientation
+    for i in range(len(lat_lon_matrix)):
+        for j in range(len(lat_lon_matrix[i])):
+            new_col_order += df.columns[df.columns.str.endswith(lat_lon_matrix[i][j])].to_list()
+        
+
+    return df[new_col_order], lat_list, lon_list

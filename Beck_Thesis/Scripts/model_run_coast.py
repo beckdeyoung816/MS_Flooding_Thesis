@@ -224,20 +224,20 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
             print(f'\n\nCoastline test results:\n {coast_test_results}')
             
             # Store coastline results
-            os.makedirs(os.path.join(model_dir, 'Results'), exist_ok=True)
-            coast_train_results.to_csv(os.path.join(model_dir, f'Results/train_coast_results_{ML}_{loss}.csv'))
-            coast_test_results.to_csv(os.path.join(model_dir, f'Results/test_coast_results_{ML}_{loss}.csv'))
+            # os.makedirs(os.path.join(model_dir, 'Results'), exist_ok=True)
+            # coast_train_results.to_csv(os.path.join(model_dir, f'Results/train_coast_results_{ML}_{loss}.csv'))
+            # coast_test_results.to_csv(os.path.join(model_dir, f'Results/test_coast_results_{ML}_{loss}.csv'))
             
             
             res = os.path.join(fn_exp, 'Results')
             os.makedirs(res, exist_ok=True)
-            res_path = f'{res}/results-{coast}-{date.today()}.xlsx'
+            res_path = f'{res}/results-{coast}-{date.today().strftime("%m-%d")}.xlsx'
             if not os.path.exists(res_path):
                 writer=pd.ExcelWriter(res_path, mode='w')
             else:
                 writer = pd.ExcelWriter(res_path, mode='a', if_sheet_exists='replace')
-            coast_test_results.to_excel(writer, sheet_name=f'{coast}_{ML}_{loss}_test')
-            coast_train_results.to_excel(writer, sheet_name=f'{coast}_{ML}_{loss}_train')
+            coast_test_results.to_excel(writer, sheet_name=f'{ML}_{loss}_test')
+            coast_train_results.to_excel(writer, sheet_name=f'{ML}_{loss}_train')
             writer.save()
             
         if logger:
@@ -251,17 +251,3 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
     else:
         print(f'\ndone ensemble runs for {ML_list}: {round((time.time() - start1) / 60, 2)} min\n')
         return df_result, df_train, df_test
-    
-    
-    
-# make a function that does binary search
-def binary_search(arr, x, lo=0, hi=None):
-    if hi is None:
-        hi = len(arr)
-    while lo < hi:
-        mid = (lo + hi) // 2
-        if arr[mid] < x:
-            lo = mid + 1
-        else:
-            hi = mid
-    return lo

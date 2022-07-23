@@ -83,7 +83,7 @@ class Coastal_Model():
         """
 
         model = models.Sequential()
-        model.add(layers.Dense(self.neurons, kernel_regularizer=keras.regularizers.l1_l2(l1=self.l1, l2=self.l2), activation=self.activ, input_dim=len(self.vars)))
+        model.add(layers.Dense(self.neurons, kernel_regularizer=keras.regularizers.l1_l2(l1=self.l1, l2=self.l2), activation=self.activ, input_dim=self.input_dim))
         for i in range(self.n_layers - 1):
             model.add(layers.Dense(self.neurons, kernel_regularizer=keras.regularizers.l1_l2(l1=self.l1, l2=self.l2), activation=self.activ))
             
@@ -98,10 +98,7 @@ class Coastal_Model():
         Design an LSTM model
         """
         # Time steps, num features
-        if self.n_ncells == 0:
-            input_shape = (1, len(self.vars))
-        elif self.n_ncells == 2:
-            input_shape = (1, len(self.vars) * 5 * 5)
+        input_shape = (1, self.input_dim)
 
         model = models.Sequential()
         for i in range(self.n_layers):
@@ -125,10 +122,7 @@ class Coastal_Model():
         Design a TCN model
         """
         # Time steps, num features
-        if self.n_ncells == 0:
-            input_shape = (1, len(self.vars))
-        elif self.n_ncells == 2:
-            input_shape = (1, len(self.vars) * 5 * 5)
+        input_shape = (1, self.input_dim)
         
         model = models.Sequential()
         for i in range(self.n_layers-lstm):
@@ -153,7 +147,13 @@ class Coastal_Model():
         """
         Design desired network type based on the ML parameter
         """
+        # Define the input shape based on spatial size
+        if self.n_ncells == 0:
+            self.input_dim = len(self.vars)
+        elif self.n_ncells == 2:
+            self.input_dim = len(self.vars) * 5 * 5
         
+        # Design the model
         if self.ML == 'ANN':
             self.ANN_model()
         elif self.ML == 'LSTM':
@@ -239,6 +239,8 @@ class Coastal_Model():
             station.result_all['train_loss'][ensemble_loop] = self.history[station.name].history['loss']
             station.result_all['test_loss'][ensemble_loop] = self.history[station.name].history['val_loss']
 
+            #station.train_X, station.train_y = None, None # free memory
+            
         self.model.save(os.path.join(self.model_dir, self.name_model), include_optimizer=True, overwrite=True)
         
     def predict(self, ensemble_loop):

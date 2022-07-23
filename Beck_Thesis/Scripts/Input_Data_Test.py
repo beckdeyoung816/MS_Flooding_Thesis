@@ -107,7 +107,7 @@ resample_method = 'rolling_mean'  # 'max' 'res_max' 'rolling_mean' ## res_max fo
 variables = ['msl', 'grad', 'u10', 'v10', 'rho', 'sst']  # 'grad', 'rho', 'phi', 'u10', 'v10', 'uquad', 'vquad'
 tt_value = 0.67  # train-test value
 scaler_type = 'std_normal'  # std_normal, MinMax
-n_ncells = 0
+n_ncells = 2
 epochs = 25
 batch = 100
 batch_normalization = False
@@ -464,7 +464,7 @@ _, _, test_X, test_y, _ = to_learning.splitting_learning(test_year, df, 0, ML, v
 # %%
 df, ds, direction = to_learning.load_file(station, input_dir)
 # %%
-df2, lat_list, lon_list = to_learning.spatial_to_column(df, ds, variables, [], n_ncells)
+df2, lat_list, lon_list = to_learning.spatial_to_column(df1, ds, variables, [], n_ncells)
 # %%
 res = pd.DataFrame([ann_test_y, ann_pred], index = ['Obs', 'Pred']).T
 # %%
@@ -733,4 +733,124 @@ inv_test_preds_ext = station.inv_test_preds[extremes_indices]
 rmse_ext = np.sqrt(mean_squared_error(inv_test_y_ext, inv_test_preds_ext))
 relative_rsme_ext = rmse_ext / station.inv_test_y.mean()
 
+
+
+# COAST ORIENTATION
 # %%
+df1, ds, direction = to_learning.load_file(station, input_dir)
+
+df1 = df1['2000-01-01':'2000-01-31']
+ds = ds.sel(time = ds.time.dt.year == 2000)
+ds = ds.sel(time = ds.time.dt.month == 1)
+
+# %%
+
+df = df1.copy().drop(['gesla_swl', 'tide_wtrend'], axis=1)
+df0 = df1.copy().drop(['gesla_swl', 'tide_wtrend'], axis=1)
+
+middle = int(len(ds.longitude)/2)
+lon_list = ds.longitude.values[middle - n_ncells: middle + n_ncells + 1]
+lat_list = ds.latitude.values[middle - n_ncells: middle + n_ncells + 1]
+
+lat = lat_list[0]
+lon = lon_list[0]
+
+# %%
+df2 = df0.copy()
+# %%
+dfi = ds[variables].sel(latitude=lat, longitude=lon).to_dataframe().drop(['latitude', 'longitude'], axis = 1)
+dfi.columns = [col + '_{}_{}'.format(lat, lon) for col in dfi.columns]
+df2 = df2.merge(dfi, how='left', right_index=True, left_index=True)
+
+# %%
+# extract all gridded data to columns
+for lat in lat_list:
+    df2 = df0.copy()
+    for lon in lon_list:    
+        dfi = ds[variables].sel(latitude=lat, longitude=lon).to_dataframe().drop(['latitude', 'longitude'], axis = 1)
+        dfi.columns = [col + '_{}_{}'.format(lat, lon) for col in dfi.columns]            
+        df2 = df2.merge(dfi, how='left', right_index=True, left_index=True)
+        del dfi
+    df = df.merge(df2.drop(['tide_wtrend', 'gesla_swl','residual'], axis = 1), how='left', right_index=True, left_index=True)
+df.drop(['tide_wtrend', 'gesla_swl'], axis=1, inplace=True)
+
+
+# %%
+df = df.merge(df2.drop(['residual'], axis = 1), how='left', right_index=True, left_index=True)
+
+
+
+# %%
+ds_df = ds.to_dataframe().reset_index().drop(['tide_wtrend', 'gesla_swl', 'uquad', 'vquad'], axis=1)
+
+# Pivot all columns except for "residual"
+test = ds_df.pivot(index=['time'], columns = ['latitude', 'longitude'])
+# Rename columns from multiindex to single index
+test.columns = ['_'.join(map(str, col_list)) for col_list in test.columns.values]
+
+
+# %%
+# We only want one column for residual and sst
+def remove_excess_lat_lon_columns(df, var):
+    cols = df.columns[df.columns.str.startswith(var)]
+    df[var] = df[cols[0]]
+    df.drop(cols, axis=1, inplace=True)
+    return df
+
+test = remove_excess_lat_lon_columns(test, 'residual')
+if 'sst' in variables:
+    test = remove_excess_lat_lon_columns(test, 'sst')
+
+# %%
+# Make a matrix where each element in a latitutde longitude tuple 
+lat_lon_matrix = [[f'{lat}_{lon}' for lon in lon_list] for lat in lat_list] 
+
+# %%
+
+# NORMALIZING TO NORTH DIRECTION
+direction = 'W'
+
+if direction == 'E':
+    lat_lon_matrix = np.rot90(lat_lon_matrix, k=1, axes=(0,1))
+elif direction == 'W':
+    lat_lon_matrix = np.rot90(lat_lon_matrix, k=3, axes=(0,1))
+elif direction == 'S':
+    lat_lon_matrix = np.rot90(lat_lon_matrix, k=2, axes=(0,1))
+# %%
+new_col_order = ['residual']
+
+for i in range(len(lat_lon_matrix)):
+    for j in range(len(lat_lon_matrix[i])):
+        lat_lon_matrix[i][j]
+
+
+# %%
+df2, lat_list, lon_list = to_learning.spatial_to_column(df1, ds, variables, [], n_ncells)
+# %%
+def spatial_to_column(df, ds, variables, selected_dates, n_ncells):
+    df = df.copy()
+    df0 = df.copy()
+    if len(selected_dates)>0:
+        df = df.loc[selected_dates,:].copy()
+
+    middle = int(len(ds.longitude)/2)
+    lon_list = ds.longitude.values[middle - n_ncells: middle + n_ncells + 1]
+    lat_list = ds.latitude.values[middle - n_ncells: middle + n_ncells + 1]
+
+    # extract all gridded data to columns
+    for lat in lat_list:
+        df2 = df0.copy()
+        for lon in lon_list:    
+            if len(selected_dates)>0:
+                dfi = ds[variables].sel(latitude=lat, longitude=lon, time=selected_dates).to_dataframe().drop(['latitude', 'longitude'], axis = 1)
+            else:
+                dfi = ds[variables].sel(latitude=lat, longitude=lon).to_dataframe().drop(['latitude', 'longitude'], axis = 1)
+            dfi.columns = [col + '_{}_{}'.format(lat, lon) for col in dfi.columns]            
+            df2 = df2.merge(dfi, how='left', right_index=True, left_index=True)
+            del dfi
+        df = df.merge(df2.drop(['tide_wtrend', 'gesla_swl','residual'], axis = 1), how='left', right_index=True, left_index=True)
+    df.drop(['tide_wtrend', 'gesla_swl'], axis=1, inplace=True)
+    return df, lat_list, lon_list
+# %%
+df = pd.DataFrame()
+df.get()
