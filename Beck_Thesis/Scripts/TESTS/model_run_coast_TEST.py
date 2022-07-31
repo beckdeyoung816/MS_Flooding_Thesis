@@ -10,12 +10,12 @@ import tensorflow as tf
 import time
 from datetime import date
 import xarray as xr
-import random as rand
+import random
 
 import sys
 sys.path.append(os.path.join(sys.path[0], r'./Scripts/'))
 
-from Scripts import to_learning, performance
+from Scripts import to_learning as tl, performance
 from Scripts.Coastal_Model import Coastal_Model
 from Scripts.station import Station
 
@@ -103,11 +103,10 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
         if not os.path.exists(model_dir):
             os.makedirs(model_dir, exist_ok=True)
 
-        
-        # Get input data for each station
-        stations = to_learning.get_all_station_data(coast, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger, model_dir)
-                                        
-            
+        #stations = tl.get_all_station_data(coast, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger)
+        train_stations, test_stations = tl.get_coast_stations(coast)
+        random.shuffle(train_stations)      
+                             
         for i in range(loop): # Loop is number of models in the ensemble
             if not logger:
                 print(f'\nEnsemble loop: {i + 1}\n')
@@ -116,7 +115,7 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
 
             # Initiliaze and run the model
             sherpa_output=None # Quick fix to ignore hyperparameter tuning
-            model = Coastal_Model(stations, ML, loss, n_layers, neurons, activation, dropout, drop_value,
+            model = Coastal_Model(train_stations, test_stations, ML, loss, n_layers, neurons, activation, dropout, drop_value,
                                       hyper_opt, validation, optimizer, epochs, batch, verbose, model_dir, filters,
                                       variables, batch_normalization, sherpa_output, logger, name_model,
                                       alpha=None, s=None, gamma=gamma, l1=l1, l2=l2, mask_val=mask_val, n_ncells=n_ncells)

@@ -11,27 +11,27 @@ NE_Atlantic_Red,NE_Atlantic_2,258,60.03,20.38,degerby-001-finland-fmi,Åland,Fö
 NE_Atlantic_Red,NE_Atlantic_2,324,60.41,18.21,forsmark-003-sweden-smhi,Sweden,Uppsala,-148.42,0.01,W,60.25,17.95,TRUE,Train
 NE_Atlantic_Red,NE_Atlantic_2,350,64.92,21.23,furuogrund-004-sweden-smhi,Sweden,Västerbotten,166.13,0,W,65.06,20.64,TRUE,Train
 NE_Atlantic_Red,NE_Atlantic_2,372,57.68,11.8,goteborg_torsh.-819a-sweden-uhslc,Sweden,Västra Götaland,147.42,0,W,57.69,11.79,TRUE,Train
-NE_Atlantic_Red,NE_Atlantic_2,396,60.56,27.18,hamina-002-finland-fmi,Finland,Southern Finland,30.49,0,E,60.82,27.62,TRUE,Train
-NE_Atlantic_Red,NE_Atlantic_2,401,59.82,22.98,hanko-003-finland-fmi,Finland,Southern Finland,16.76,0,E,60.43,24.98,TRUE,Test
+NE_Atlantic_Red,NE_Atlantic_2,396,60.56,27.18,hamina-002-finland-fmi,Finland,Southern Finland,30.49,0,E,60.82,27.62,TRUE,
+NE_Atlantic_Red,NE_Atlantic_2,401,59.82,22.98,hanko-003-finland-fmi,Finland,Southern Finland,16.76,0,E,60.43,24.98,TRUE,
 NE_Atlantic_Red,NE_Atlantic_2,426,70.98,25.97,honningsvaag-002-norway-statkart,Norway,Finnmark,166.67,0,W,71.05,25.69,TRUE,Train
 NE_Atlantic_Red,NE_Atlantic_2,476,65.7,23.1,kalix-006-sweden-smhi,Sweden,Norrbotten,157.41,0,W,66.3,21.65,TRUE,Train
-NE_Atlantic_Red,NE_Atlantic_2,487,62.34,21.21,kaskinen-005-finland-fmi,Finland,Western Finland,30.56,0,E,62.35,21.22,TRUE,Train
+NE_Atlantic_Red,NE_Atlantic_2,487,62.34,21.21,kaskinen-005-finland-fmi,Finland,Western Finland,30.56,0,E,62.35,21.22,TRUE,
 NE_Atlantic_Red,NE_Atlantic_2,495,65.67,24.52,kemi-006-finland-fmi,Finland,Lapland,-0.43,0.01,E,65.67,24.57,TRUE,Train
 NE_Atlantic_Red,NE_Atlantic_2,525,59,11.13,kungsvik-009-sweden-smhi,Sweden,Västra Götaland,-36.82,0,E,58.59,11.68,TRUE,Train
 NE_Atlantic_Red,NE_Atlantic_2,609,61.93,5.11,maaloey-003-norway-statkart,Norway,Sogn og Fjordane,128.75,0,N,61.98,5.08,TRUE,Train
 NE_Atlantic_Red,NE_Atlantic_2,645,61.59,21.46,mantyluoto-007-finland-fmi,Finland,Western Finland,-6.15,0.01,E,61.59,21.48,TRUE,
 NE_Atlantic_Red,NE_Atlantic_2,795,59.91,10.73,oslo-004-norway-statkart,Norway,Oslo,91.09,0,N,59.98,10.73,TRUE,Train
 NE_Atlantic_Red,NE_Atlantic_2,798,65.04,25.42,oulu-008-finland-fmi,Finland,Oulu,12.08,0,E,65.46,27.36,TRUE,
-NE_Atlantic_Red,NE_Atlantic_2,833,63.71,22.69,pietarsaari-009-finland-fmi,Finland,Western Finland,-14.39,0,E,63.42,23.83,TRUE,Train
-NE_Atlantic_Red,NE_Atlantic_2,956,64.67,24.41,raahe-010-finland-fmi,Finland,Oulu,-16.15,0,E,64.34,25.54,TRUE,Train
+NE_Atlantic_Red,NE_Atlantic_2,833,63.71,22.69,pietarsaari-009-finland-fmi,Finland,Western Finland,-14.39,0,E,63.42,23.83,TRUE,
+NE_Atlantic_Red,NE_Atlantic_2,956,64.67,24.41,raahe-010-finland-fmi,Finland,Oulu,-16.15,0,E,64.34,25.54,TRUE,
 NE_Atlantic_Red,NE_Atlantic_2,962,63.99,20.9,ratan-015-sweden-smhi,Sweden,Västerbotten,143.43,0,W,64.32,20.44,TRUE,Test
-NE_Atlantic_Red,NE_Atlantic_2,963,61.13,21.43,rauma-011-finland-fmi,Finland,Western Finland,-14.17,0.03,E,60.74,22.98,TRUE,Test
+NE_Atlantic_Red,NE_Atlantic_2,963,61.13,21.43,rauma-011-finland-fmi,Finland,Western Finland,-14.17,0.03,E,60.74,22.98,TRUE,
 NE_Atlantic_Red,NE_Atlantic_2,976,57.25,12.11,ringhals-016-sweden-smhi,Sweden,Halland,-18.5,0,E,57.04,12.75,TRUE,Test
 NE_Atlantic_Red,NE_Atlantic_2,983,64.86,11.23,roervik-005-norway-statkart,Norway,Nord-Trøndelag,166.15,0,W,64.9,11.06,TRUE,Test
-NE_Atlantic_Red,NE_Atlantic_2,"1,102",62.36,17.53,spikarna-021-sweden-smhi,Sweden,Västernorrland,144.9,0.01,W,62.41,17.46,TRUE,Test
+NE_Atlantic_Red,NE_Atlantic_2,"1,102",62.36,17.53,spikarna-021-sweden-smhi,Sweden,Västernorrland,144.9,0.01,W,62.41,17.46,TRUE,Train
 NE_Atlantic_Red,NE_Atlantic_2,"1,118",58.09,11.83,stenungsund-022-sweden-smhi,Sweden,Västra Götaland,107.6,0,N,58.59,11.68,TRUE,Test
-NE_Atlantic_Red,NE_Atlantic_2,"1,191",60.43,22.1,turku-012-finland-fmi,Finland,Western Finland,19.58,0,E,60.74,22.98,TRUE,Test
-NE_Atlantic_Red,NE_Atlantic_2,"1,200",63.08,21.57,vaasa-013-finland-fmi,Finland,Western Finland,123.18,0,N,63.09,21.57,TRUE,Test
+NE_Atlantic_Red,NE_Atlantic_2,"1,191",60.43,22.1,turku-012-finland-fmi,Finland,Western Finland,19.58,0,E,60.74,22.98,TRUE,
+NE_Atlantic_Red,NE_Atlantic_2,"1,200",63.08,21.57,vaasa-013-finland-fmi,Finland,Western Finland,123.18,0,N,63.09,21.57,TRUE,
 NE_Atlantic_Red,NE_Atlantic_2,"1,209",70.33,31.1,"vardo,norway-vardo,norway-glossdm-bodc",Norway,Finnmark,111.01,0.03,N,70.38,31.08,TRUE,Test
 Japan_Red,Japan,187,35.75,140.87,choshigyoko-choshigyoko-japan-jma,Japan,Ibaraki,-100.36,0.01,S,35.74,140.87,TRUE,Train
 Japan_Red,Japan,621,34.68,137.62,maisaka-356a-japan-uhslc,Japan,Shizuoka,25.15,0,E,35.02,138.34,TRUE,Train

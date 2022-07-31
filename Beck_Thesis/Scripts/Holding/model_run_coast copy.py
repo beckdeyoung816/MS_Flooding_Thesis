@@ -69,6 +69,71 @@ def set_logger(arg_start, arg_end, verbose=True):
 
     return logger, ch
 
+def get_input_data(station, train_test, variables, ML, input_dir, resample, resample_method, batch,
+                   scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold,
+                   logger):
+    """Get the input data for a given station and preprocess it. This includes generating a training, test, and validation set. 
+
+    Args:
+        station (str): Name of station
+        train_test (str): Whether the station is used for training or testing ("Train", "Test")
+
+    Returns:
+        Station: Station object with input data
+    """
+    
+    print(f'\nGetting Input Data for {station}\n')
+    df, lat_list, lon_list, direction, scaler, reframed, test_dates, i_test_dates = to_learning.prepare_station(station, variables, ML, input_dir, resample, resample_method,
+                                                                                                                cluster_years=5, extreme_thr=0.02, sample=False, make_univariate=False,
+                                                                                                                scaler_type=scaler_type, year = year, scaler_op=True, n_ncells=n_ncells, mask_val=mask_val, logger=logger)
+    # Turn batch size from daily to hourly
+    if resample == 'hourly':                            
+        batch = batch * 24
+
+    # split testing phase year    
+    test_year = reframed.iloc[i_test_dates].copy()
+
+    # NaN masking the complete test year 
+    reframed.iloc[i_test_dates] = np.nan  
+
+    # Generate test set
+    test_year.loc[test_year.iloc[:,-1].isna(),'values(t)'] = mask_val #Changing all NaN values in residual testing year to masking_val                                                                                                                                            
+    _, _, test_X, test_y, _ = to_learning.splitting_learning(test_year, df, 0, ML, variables, direction, lat_list, lon_list, batch, n_train=False)
+   
+    # Reframe df
+    reframed_ensemble = reframed.copy()
+    reframed_draw, n_train = to_learning.select_ensemble(reframed_ensemble, 'values(t)', ML, batch, tt_value=tt_value, frac_ens = frac_ens, mask_val=mask_val, NaN_threshold=NaN_threshold) 
+    
+    # We modify the input data so that it is masked        
+    reframed_draw = reframed_draw.reset_index(drop=True).copy()
+    reframed_draw[reframed_draw.iloc[:,-1]==mask_val] = mask_val
+    
+    # Generate training and validation sets
+    train_X, train_y, val_X, val_y, n_train = to_learning.splitting_learning(reframed_draw, df, tt_value, ML, variables, direction, lat_list, lon_list, batch, n_train=n_train)
+    
+
+    return Station(station, train_test, train_X, train_y, test_X, test_y, val_X, val_y, scaler, df, reframed, 0, i_test_dates, test_year)
+
+
+def get_coast_stations(coast):
+    """Gets list of training and test stations for a given coast
+
+    Args:
+        coast (str): Name of coast
+
+    Returns:
+        list, list: list of training stations, list of testing stations
+    """
+    # Load in stations df
+    station_data = pd.read_csv('Stations/Selected_Stations_w_Data.csv').dropna().reset_index(drop=True)
+    coast_stations = station_data[station_data['Coast'] == coast] 
+    
+    # Get desired station lists
+    train_stations = coast_stations['Station'][coast_stations['Train_test'] == 'Train'].tolist()
+    test_stations = coast_stations['Station'][coast_stations['Train_test'] == 'Test'].tolist()
+
+    return train_stations, test_stations
+
 def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_method, scaler_type,
              batch, n_layers, neurons, filters, dropout, drop_value, activation, optimizer,
              batch_normalization, loss, epochs, loop=5, n_ncells=2, l1=0.00, l2=0.01, frac_ens=0.5, logger=False, complexity=False,
@@ -105,7 +170,16 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
 
         
         # Get input data for each station
-        stations = to_learning.get_all_station_data(coast, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger, model_dir)
+        stations = {}
+        train_stations, test_stations = get_coast_stations(coast)
+        rand.shuffle(train_stations) # Randomize order of training stations
+        for station in train_stations + test_stations:# [:2]:
+            # Get input data for the station
+            # This includes the train, test, and validation data, as well as the scaler and transformed data for inverse transforming
+            train_test = 'Train' if station in train_stations else 'Test'
+            input = get_input_data(station, train_test, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger)
+            if input is not None: # Only store result if we have data for it
+                stations[station] = input
                                         
             
         for i in range(loop): # Loop is number of models in the ensemble

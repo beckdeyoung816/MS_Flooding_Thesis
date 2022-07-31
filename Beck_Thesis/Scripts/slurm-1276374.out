@@ -1,0 +1,305 @@
+2022-07-30 20:07:12.488428: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-07-30 20:07:12.488595: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+2022-07-30 20:07:17,205 - ML_stormsurges_loop_2-2 -INFO - File logging to logger/ML_stormsurges_loop_2-2_logfile_Sat_Jul_30_20_07_17_2022.log
+2022-07-30 20:08:47,460 - ML_stormsurges_loop_2-2 -INFO - done preparing data for goteborg_torsh.-819a-sweden-uhslc:  90.22 sec
+2022-07-30 20:10:58,679 - ML_stormsurges_loop_2-2 -INFO - done preparing data for forsmark-003-sweden-smhi:  99.30 sec
+2022-07-30 20:13:11,976 - ML_stormsurges_loop_2-2 -INFO - done preparing data for kalix-006-sweden-smhi:  99.39 sec
+2022-07-30 20:15:24,058 - ML_stormsurges_loop_2-2 -INFO - done preparing data for kungsvik-009-sweden-smhi:  98.38 sec
+2022-07-30 20:17:38,264 - ML_stormsurges_loop_2-2 -INFO - done preparing data for furuogrund-004-sweden-smhi:  100.18 sec
+2022-07-30 20:19:52,858 - ML_stormsurges_loop_2-2 -INFO - done preparing data for honningsvaag-002-norway-statkart:  100.70 sec
+2022-07-30 20:23:56,329 - ML_stormsurges_loop_2-2 -INFO - done preparing data for degerby-001-finland-fmi:  110.98 sec
+2022-07-30 20:27:12,452 - ML_stormsurges_loop_2-2 -INFO - done preparing data for maaloey-003-norway-statkart:  82.57 sec
+2022-07-30 20:29:05,104 - ML_stormsurges_loop_2-2 -INFO - done preparing data for kemi-006-finland-fmi:  78.91 sec
+2022-07-30 20:33:39,300 - ML_stormsurges_loop_2-2 -INFO - done preparing data for oslo-004-norway-statkart:  82.04 sec
+2022-07-30 20:36:37,322 - ML_stormsurges_loop_2-2 -INFO - done preparing data for ratan-015-sweden-smhi:  82.12 sec
+2022-07-30 20:39:52,393 - ML_stormsurges_loop_2-2 -INFO - done preparing data for ringhals-016-sweden-smhi:  81.51 sec
+2022-07-30 20:41:48,718 - ML_stormsurges_loop_2-2 -INFO - done preparing data for roervik-005-norway-statkart:  82.19 sec
+2022-07-30 20:43:44,027 - ML_stormsurges_loop_2-2 -INFO - done preparing data for spikarna-021-sweden-smhi:  81.82 sec
+2022-07-30 20:45:40,538 - ML_stormsurges_loop_2-2 -INFO - done preparing data for stenungsund-022-sweden-smhi:  82.34 sec
+2022-07-30 20:49:50,088 - ML_stormsurges_loop_2-2 -INFO - done preparing data for vardo,norway-vardo,norway-glossdm-bodc:  54.20 sec
+2022-07-30 20:51:24,244 - ML_stormsurges_loop_2-2 -INFO - done preparing data for kungsvik-009-sweden-smhi:  77.32 sec
+2022-07-30 20:53:17,939 - ML_stormsurges_loop_2-2 -INFO - done preparing data for forsmark-003-sweden-smhi:  77.40 sec
+2022-07-30 20:55:12,420 - ML_stormsurges_loop_2-2 -INFO - done preparing data for maaloey-003-norway-statkart:  78.17 sec
+2022-07-30 21:00:46,665 - ML_stormsurges_loop_2-2 -INFO - done preparing data for goteborg_torsh.-819a-sweden-uhslc:  73.10 sec
+2022-07-30 21:02:38,885 - ML_stormsurges_loop_2-2 -INFO - done preparing data for furuogrund-004-sweden-smhi:  77.87 sec
+2022-07-30 21:04:33,227 - ML_stormsurges_loop_2-2 -INFO - done preparing data for degerby-001-finland-fmi:  78.01 sec
+2022-07-30 21:06:26,946 - ML_stormsurges_loop_2-2 -INFO - done preparing data for oslo-004-norway-statkart:  79.43 sec
+2022-07-30 21:08:21,443 - ML_stormsurges_loop_2-2 -INFO - done preparing data for kalix-006-sweden-smhi:  79.66 sec
+2022-07-30 21:10:15,833 - ML_stormsurges_loop_2-2 -INFO - done preparing data for honningsvaag-002-norway-statkart:  78.23 sec
+2022-07-30 21:12:04,248 - ML_stormsurges_loop_2-2 -INFO - done preparing data for kemi-006-finland-fmi:  75.93 sec
+2022-07-30 21:16:14,616 - ML_stormsurges_loop_2-2 -INFO - done preparing data for ratan-015-sweden-smhi:  78.68 sec
+2022-07-30 21:19:26,120 - ML_stormsurges_loop_2-2 -INFO - done preparing data for ringhals-016-sweden-smhi:  78.45 sec
+2022-07-30 21:21:21,695 - ML_stormsurges_loop_2-2 -INFO - done preparing data for roervik-005-norway-statkart:  79.22 sec
+2022-07-30 21:23:15,679 - ML_stormsurges_loop_2-2 -INFO - done preparing data for spikarna-021-sweden-smhi:  78.36 sec
+2022-07-30 21:25:10,707 - ML_stormsurges_loop_2-2 -INFO - done preparing data for stenungsund-022-sweden-smhi:  78.52 sec
+2022-07-30 21:29:13,798 - ML_stormsurges_loop_2-2 -INFO - done preparing data for vardo,norway-vardo,norway-glossdm-bodc:  52.51 sec
+2022-07-30 21:30:12,847 - ML_stormsurges_loop_2-2 -INFO - done preparing data for princerupert,canada-princerupert,canada-glossdm-bodc:  42.27 sec
+2022-07-30 21:31:31,512 - ML_stormsurges_loop_2-2 -INFO - done preparing data for sitka,ak-559a-usa-uhslc:  73.49 sec
+2022-07-30 21:33:19,258 - ML_stormsurges_loop_2-2 -INFO - done preparing data for adak,alaska-040a-usa-uhslc:  73.22 sec
+2022-07-30 21:35:09,060 - ML_stormsurges_loop_2-2 -INFO - done preparing data for seward-9455090-usa-noaa:  76.53 sec
+2022-07-30 21:36:56,231 - ML_stormsurges_loop_2-2 -INFO - done preparing data for sand_point,ak-574a-usa-uhslc:  73.19 sec
+2022-07-30 21:38:42,992 - ML_stormsurges_loop_2-2 -INFO - done preparing data for yakutat,ak-570a-usa-uhslc:  73.28 sec
+2022-07-30 21:39:58,205 - ML_stormsurges_loop_2-2 -INFO - done preparing data for princerupert,canada-princerupert,canada-glossdm-bodc:  41.77 sec
+2022-07-30 21:41:15,503 - ML_stormsurges_loop_2-2 -INFO - done preparing data for adak,alaska-040a-usa-uhslc:  72.14 sec
+2022-07-30 21:43:01,130 - ML_stormsurges_loop_2-2 -INFO - done preparing data for sitka,ak-559a-usa-uhslc:  72.23 sec
+2022-07-30 21:44:52,236 - ML_stormsurges_loop_2-2 -INFO - done preparing data for seward-9455090-usa-noaa:  76.46 sec
+2022-07-30 21:46:39,231 - ML_stormsurges_loop_2-2 -INFO - done preparing data for sand_point,ak-574a-usa-uhslc:  72.88 sec
+2022-07-30 21:48:26,124 - ML_stormsurges_loop_2-2 -INFO - done preparing data for yakutat,ak-570a-usa-uhslc:  73.24 sec
+
+Coast: NE_Atlantic_2 
+ *************************
+Variables: ['msl', 'grad', 'u10', 'v10', 'rho', 'sst']
+
+Getting Input Data for goteborg_torsh.-819a-sweden-uhslc
+
+
+Getting Input Data for forsmark-003-sweden-smhi
+
+
+Getting Input Data for kalix-006-sweden-smhi
+
+
+Getting Input Data for kungsvik-009-sweden-smhi
+
+
+Getting Input Data for furuogrund-004-sweden-smhi
+
+
+Getting Input Data for honningsvaag-002-norway-statkart
+
+
+Getting Input Data for hamina-002-finland-fmi
+
+**************Not enough data for station: hamina-002-finland-fmi
+
+Getting Input Data for degerby-001-finland-fmi
+
+
+Getting Input Data for raahe-010-finland-fmi
+
+**************Not enough data for station: raahe-010-finland-fmi
+
+Getting Input Data for maaloey-003-norway-statkart
+
+
+Getting Input Data for kemi-006-finland-fmi
+
+
+Getting Input Data for pietarsaari-009-finland-fmi
+
+**************Not enough data for station: pietarsaari-009-finland-fmi
+
+Getting Input Data for kaskinen-005-finland-fmi
+
+**************Not enough data for station: kaskinen-005-finland-fmi
+
+Getting Input Data for oslo-004-norway-statkart
+
+
+Getting Input Data for hanko-003-finland-fmi
+
+**************Not enough data for station: hanko-003-finland-fmi
+
+Getting Input Data for ratan-015-sweden-smhi
+
+
+Getting Input Data for rauma-011-finland-fmi
+
+**************Not enough data for station: rauma-011-finland-fmi
+
+Getting Input Data for ringhals-016-sweden-smhi
+
+
+Getting Input Data for roervik-005-norway-statkart
+
+
+Getting Input Data for spikarna-021-sweden-smhi
+
+
+Getting Input Data for stenungsund-022-sweden-smhi
+
+
+Getting Input Data for turku-012-finland-fmi
+
+**************Not enough data for station: turku-012-finland-fmi
+
+Getting Input Data for vaasa-013-finland-fmi
+
+**************Not enough data for station: vaasa-013-finland-fmi
+
+Getting Input Data for vardo,norway-vardo,norway-glossdm-bodc
+
+
+
+
+
+ Station No Data List: ['hamina-002-finland-fmi', 'raahe-010-finland-fmi', 'pietarsaari-009-finland-fmi', 'kaskinen-005-finland-fmi', 'hanko-003-finland-fmi', 'rauma-011-finland-fmi', 'turku-012-finland-fmi', 'vaasa-013-finland-fmi']
+
+
+
+
+Coast: NE_Atlantic_2 
+ *************************
+Variables: ['msl', 'grad', 'u10', 'v10', 'rho']
+
+Getting Input Data for kungsvik-009-sweden-smhi
+
+
+Getting Input Data for forsmark-003-sweden-smhi
+
+
+Getting Input Data for maaloey-003-norway-statkart
+
+
+Getting Input Data for kaskinen-005-finland-fmi
+
+**************Not enough data for station: kaskinen-005-finland-fmi
+
+Getting Input Data for hamina-002-finland-fmi
+
+**************Not enough data for station: hamina-002-finland-fmi
+
+Getting Input Data for pietarsaari-009-finland-fmi
+
+**************Not enough data for station: pietarsaari-009-finland-fmi
+
+Getting Input Data for goteborg_torsh.-819a-sweden-uhslc
+
+
+Getting Input Data for furuogrund-004-sweden-smhi
+
+
+Getting Input Data for degerby-001-finland-fmi
+
+
+Getting Input Data for oslo-004-norway-statkart
+
+
+Getting Input Data for kalix-006-sweden-smhi
+
+
+Getting Input Data for honningsvaag-002-norway-statkart
+
+
+Getting Input Data for kemi-006-finland-fmi
+
+
+Getting Input Data for raahe-010-finland-fmi
+
+**************Not enough data for station: raahe-010-finland-fmi
+
+Getting Input Data for hanko-003-finland-fmi
+
+**************Not enough data for station: hanko-003-finland-fmi
+
+Getting Input Data for ratan-015-sweden-smhi
+
+
+Getting Input Data for rauma-011-finland-fmi
+
+**************Not enough data for station: rauma-011-finland-fmi
+
+Getting Input Data for ringhals-016-sweden-smhi
+
+
+Getting Input Data for roervik-005-norway-statkart
+
+
+Getting Input Data for spikarna-021-sweden-smhi
+
+
+Getting Input Data for stenungsund-022-sweden-smhi
+
+
+Getting Input Data for turku-012-finland-fmi
+
+**************Not enough data for station: turku-012-finland-fmi
+
+Getting Input Data for vaasa-013-finland-fmi
+
+**************Not enough data for station: vaasa-013-finland-fmi
+
+Getting Input Data for vardo,norway-vardo,norway-glossdm-bodc
+
+
+
+
+
+ Station No Data List: ['kaskinen-005-finland-fmi', 'hamina-002-finland-fmi', 'pietarsaari-009-finland-fmi', 'raahe-010-finland-fmi', 'hanko-003-finland-fmi', 'rauma-011-finland-fmi', 'turku-012-finland-fmi', 'vaasa-013-finland-fmi']
+
+
+
+
+Coast: NE_Pacific 
+ *************************
+Variables: ['msl', 'grad', 'u10', 'v10', 'rho']
+
+Getting Input Data for princerupert,canada-princerupert,canada-glossdm-bodc
+
+
+Getting Input Data for sitka,ak-559a-usa-uhslc
+
+
+Getting Input Data for adak,alaska-040a-usa-uhslc
+
+
+Getting Input Data for seward-9455090-usa-noaa
+
+
+Getting Input Data for sand_point,ak-574a-usa-uhslc
+
+
+Getting Input Data for yakutat,ak-570a-usa-uhslc
+
+
+
+
+
+ Station No Data List: []
+
+
+
+
+Coast: NE_Pacific 
+ *************************
+Variables: ['msl', 'grad', 'u10', 'v10', 'rho']
+
+Getting Input Data for princerupert,canada-princerupert,canada-glossdm-bodc
+
+
+Getting Input Data for adak,alaska-040a-usa-uhslc
+
+
+Getting Input Data for sitka,ak-559a-usa-uhslc
+
+
+Getting Input Data for seward-9455090-usa-noaa
+
+
+Getting Input Data for sand_point,ak-574a-usa-uhslc
+
+
+Getting Input Data for yakutat,ak-570a-usa-uhslc
+
+
+
+
+
+ Station No Data List: []
+
+
+
+
+JOB STATISTICS
+==============
+Job ID: 1276374
+Cluster: snellius
+User/Group: deyoungb/deyoungb
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 32
+CPU Utilized: 01:40:41
+CPU Efficiency: 3.08% of 2-06:30:24 core-walltime
+Job Wall-clock time: 01:42:12
+Memory Utilized: 50.05 GB
+Memory Efficiency: 83.42% of 60.00 GB

@@ -13,8 +13,7 @@ from sklearn.pipeline import make_pipeline
 import sys
 import time
 import xarray as xr
-from station import Station
-import random as rand
+
 
 def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
     # convert series to supervised learning
@@ -265,9 +264,7 @@ def draw_sample(df, col, timesteps, threshold=0, year='last'):
     # create pool of dates and randomly select dates interval
     pool = value_count[value_count > timesteps].index.values
     if len(pool) < 1:
-        #sys.exit(f'No consecutive {timesteps} timesteps found without specified NaN interval')
-        # Raise an error
-        raise ValueError(f'No consecutive {timesteps} timesteps found without specified NaN interval')
+        sys.exit(f'No consecutive {timesteps} timesteps found without specified NaN interval')
     
     if year == 'random':
         # check if at least has 75% values
@@ -470,6 +467,7 @@ def split_tt(reframed, ML, tt_value, n_train):
         # split into input and outputs
         train_X, train_y = train[:, :-1], train[:, -1]
         test_X, test_y = test[:, :-1], test[:, -1]
+
         # reshape input to be 3D [samples, timesteps, features]
         train_X = train_X.reshape((train_X.shape[0], 1, train_X.shape[1]))
         test_X = test_X.reshape((test_X.shape[0], 1, test_X.shape[1]))
@@ -495,7 +493,8 @@ def prepare_station(station, variables, ML, input_dir, resample, resample_method
 
     # read in variables
     df, ds, direction = load_file(station, input_dir)
-    # print('Station is loaded')
+    #ds = ds.sel(time=slice('1990-01-01', '2000-01-01'))
+    #print('Station is loaded')
 
     if sample == 'cluster':
         print(f'Selecting {cluster_years} years of data')
@@ -507,7 +506,7 @@ def prepare_station(station, variables, ML, input_dir, resample, resample_method
         selected_dates = []
 
     
-    if n_ncells > 0:
+    if n_ncells > 1:
         df, lat_list, lon_list = normalize_coast_orientation(ds, direction, variables, n_ncells)
     else:
         df, lat_list, lon_list = spatial_to_column(df, ds, variables, selected_dates, n_ncells)
@@ -546,89 +545,6 @@ def splitting_learning(reframed, df, tt_value, ML, variables, direction, lat_lis
     return train_X, train_y, test_X, test_y, n_train
 
 
-
-def get_input_data(station, train_test, variables, ML, input_dir, resample, resample_method, batch,
-                   scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold,
-                   logger, model_dir):
-    """Get the input data for a given station and preprocess it. This includes generating a training, test, and validation set. 
-
-    Args:
-        station (str): Name of station
-        train_test (str): Whether the station is used for training or testing ("Train", "Test")
-
-    Returns:
-        Station: Station object with input data
-    """
-    
-    print(f'\nGetting Input Data for {station}\n')
-    df, lat_list, lon_list, direction, scaler, reframed, test_dates, i_test_dates = prepare_station(station, variables, ML, input_dir, resample, resample_method,
-                                                                                                                cluster_years=5, extreme_thr=0.02, sample=False, make_univariate=False,
-                                                                                                                scaler_type=scaler_type, year = year, scaler_op=True, n_ncells=n_ncells, mask_val=mask_val, logger=logger)
-    # Turn batch size from daily to hourly
-    if resample == 'hourly':                            
-        batch = batch * 24
-
-    # split testing phase year    
-    test_year = reframed.iloc[i_test_dates].copy()
-
-    # NaN masking the complete test year 
-    reframed.iloc[i_test_dates] = np.nan  
-
-    # Generate test set
-    test_year.loc[test_year.iloc[:,-1].isna(),'values(t)'] = mask_val #Changing all NaN values in residual testing year to masking_val                                                                                                                                            
-    _, _, test_X, test_y, _ = splitting_learning(test_year, df, 0, ML, variables, direction, lat_list, lon_list, batch, n_train=False)
-   
-    # Reframe df
-    reframed_ensemble = reframed.copy()
-    reframed_draw, n_train = select_ensemble(reframed_ensemble, 'values(t)', ML, batch, tt_value=tt_value, frac_ens = frac_ens, mask_val=mask_val, NaN_threshold=NaN_threshold) 
-    
-    # We modify the input data so that it is masked        
-    reframed_draw = reframed_draw.reset_index(drop=True).copy()
-    reframed_draw[reframed_draw.iloc[:,-1]==mask_val] = mask_val
-    
-    # Generate training and validation sets
-    train_X, train_y, val_X, val_y, n_train = splitting_learning(reframed_draw, df, tt_value, ML, variables, direction, lat_list, lon_list, batch, n_train=n_train)
-    
-
-    return Station(station, train_test, train_X, train_y, test_X, test_y, val_X, val_y, scaler, df, reframed, 0, i_test_dates, test_year, model_dir, ML)
-
-
-def get_coast_stations(coast):
-    """Gets list of training and test stations for a given coast
-
-    Args:
-        coast (str): Name of coast
-
-    Returns:
-        list, list: list of training stations, list of testing stations
-    """
-    # Load in stations df
-    station_data = pd.read_csv('Stations/Selected_Stations_w_Data.csv').dropna().reset_index(drop=True)
-    coast_stations = station_data[station_data['Coast'] == coast] 
-    
-    # Get desired station lists
-    train_stations = coast_stations['Station'][coast_stations['Train_test'] == 'Train'].tolist()
-    test_stations = coast_stations['Station'][coast_stations['Train_test'] == 'Test'].tolist()
-
-    return train_stations, test_stations
-
-
-def get_all_station_data(coast, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger, model_dir):
-        # Get input data for each station
-        stations = {}
-        train_stations, test_stations = get_coast_stations(coast)
-        rand.shuffle(train_stations) # Randomize order of training stations
-        for station in train_stations + test_stations:# [:2]:
-            # Get input data for the station
-            # This includes the train, test, and validation data, as well as the scaler and transformed data for inverse transforming
-            try:
-                train_test = 'Train' if station in train_stations else 'Test'
-                stations[station] = get_input_data(station, train_test, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger, model_dir)
-            except:
-                print('Not enough data for station station: ', station)
-                
-        return stations
-
 def normalize_coast_orientation(ds, direction, variables, n_ncells):
     
     # Identify desired lats and lons
@@ -638,10 +554,10 @@ def normalize_coast_orientation(ds, direction, variables, n_ncells):
     
     # Turn xarray into pandas dataframe and select desired variables
     ds_df = ds.to_dataframe().get(['residual'] + variables).reset_index()
-    
+
     # Pivot dataframe to get a unique column for each latitude longitude and variable
     df = ds_df.pivot(index='time', columns = ['latitude', 'longitude'])
-    
+
     # Rename columns from multiindex to single index of the form: 'variable_latitude_longitude'
     df.columns = ['_'.join(map(str, col_list)) for col_list in df.columns.values]
     
@@ -688,5 +604,4 @@ def normalize_coast_orientation(ds, direction, variables, n_ncells):
         for j in range(len(lat_lon_matrix[i])):
             new_col_order += df.columns[df.columns.str.endswith(lat_lon_matrix[i][j])].to_list()
         
-
     return df[new_col_order], lat_list, lon_list

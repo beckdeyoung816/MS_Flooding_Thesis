@@ -18,7 +18,8 @@ import numpy as np
 import random
 import keras.backend as K
 import tcn
-from station import Station
+
+import to_learning as tl
 
 def reset_seeds():
     #Solution to reset random states from: https://stackoverflow.com/questions/58453793/the-clear-session-method-of-keras-backend-does-not-clean-up-the-fitting-data 
@@ -30,7 +31,7 @@ def reset_seeds():
         tf.set_random_seed(3)
     print("RANDOM SEEDS RESET")
 class Coastal_Model():
-    def __init__(self, station_inputs: dict[str, Station], ML, loss, n_layers, neurons, activation, dropout, drop_value, 
+    def __init__(self, train_stations, test_stations, ML, loss, n_layers, neurons, activation, dropout, drop_value, 
                  hyper_opt, validation, optimizer, epochs, batch, verbose, model_dir, filters, 
                  variables, batch_normalization, sherpa_output, logger, name_model,
                  alpha=13, s=1.7, gamma=1.1, l1=0.01, l2=0.01, mask_val=-999, n_ncells=0):
@@ -66,7 +67,8 @@ class Coastal_Model():
             
         
         # Data & Misc
-        self.station_inputs = station_inputs
+        self.train_stations = train_stations
+        self.test_stations = test_stations
         self.batch_size = batch
         self.model_dir = model_dir
         self.name_model = name_model
@@ -221,12 +223,13 @@ class Coastal_Model():
         self.history = {}
         
         # Fit network sequentially on each station
-        train_stations = [station for station in self.station_inputs.values() if station.train_test == 'Train']
-        num_stations = len(train_stations)
-        for j, station in enumerate(train_stations):
-            print(f'\nTraining Station ({j+1} of {num_stations}): {station.name}\n')
+
+        #train_stations = [station for station in self.station_inputs.values() if station.train_test == 'Train']
+        
+        num_stations = len(self.train_stations)
+        for j, station in enumerate(self.train_stations):
+            print(f'\nTraining Station ({j+1} of {num_stations}): {station}\n')
             
-            station.reload_data()
             # fit network
             if self.validation == 'split':
                 self.history[station.name] = self.model.fit(station.train_X, station.train_y, epochs=self.epochs, batch_size=self.batch_size, 
@@ -241,8 +244,8 @@ class Coastal_Model():
             station.result_all['train_loss'][ensemble_loop] = self.history[station.name].history['loss']
             station.result_all['test_loss'][ensemble_loop] = self.history[station.name].history['val_loss']
 
-            station.store_and_delete_data(store=False)
-
+            #station.train_X, station.train_y = None, None # free memory
+            
         self.model.save(os.path.join(self.model_dir, self.name_model), include_optimizer=True, overwrite=True)
         
     def predict(self, ensemble_loop):

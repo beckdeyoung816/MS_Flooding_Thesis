@@ -737,16 +737,18 @@ relative_rsme_ext = rmse_ext / station.inv_test_y.mean()
 
 # COAST ORIENTATION
 # %%
-df1, ds, direction = to_learning.load_file(station, input_dir)
+df, ds, direction = to_learning.load_file(station, input_dir)
 
-df1 = df1['2000-01-01':'2000-01-31']
-ds = ds.sel(time = ds.time.dt.year == 2000)
-ds = ds.sel(time = ds.time.dt.month == 1)
+# df = df['2000-01-01':'2000-01-31']
+# ds = ds.sel(time = ds.time.dt.year == 2000)
+# ds = ds.sel(time = ds.time.dt.month == 1)
+
+ds = ds.sel(time=slice('1990-01-01', '2000-01-01'))
 
 # %%
 
-df = df1.copy().drop(['gesla_swl', 'tide_wtrend'], axis=1)
-df0 = df1.copy().drop(['gesla_swl', 'tide_wtrend'], axis=1)
+df = df.copy().drop(['gesla_swl', 'tide_wtrend'], axis=1)
+df0 = df.copy().drop(['gesla_swl', 'tide_wtrend'], axis=1)
 
 middle = int(len(ds.longitude)/2)
 lon_list = ds.longitude.values[middle - n_ncells: middle + n_ncells + 1]
@@ -825,32 +827,10 @@ for i in range(len(lat_lon_matrix)):
 
 
 # %%
-df2, lat_list, lon_list = to_learning.spatial_to_column(df1, ds, variables, [], n_ncells)
+df, lat_list, lon_list = to_learning.spatial_to_column(df, ds, variables, [], n_ncells)
+df.dropna(inplace=True)
 # %%
-def spatial_to_column(df, ds, variables, selected_dates, n_ncells):
-    df = df.copy()
-    df0 = df.copy()
-    if len(selected_dates)>0:
-        df = df.loc[selected_dates,:].copy()
 
-    middle = int(len(ds.longitude)/2)
-    lon_list = ds.longitude.values[middle - n_ncells: middle + n_ncells + 1]
-    lat_list = ds.latitude.values[middle - n_ncells: middle + n_ncells + 1]
+df = df2.dropna()
 
-    # extract all gridded data to columns
-    for lat in lat_list:
-        df2 = df0.copy()
-        for lon in lon_list:    
-            if len(selected_dates)>0:
-                dfi = ds[variables].sel(latitude=lat, longitude=lon, time=selected_dates).to_dataframe().drop(['latitude', 'longitude'], axis = 1)
-            else:
-                dfi = ds[variables].sel(latitude=lat, longitude=lon).to_dataframe().drop(['latitude', 'longitude'], axis = 1)
-            dfi.columns = [col + '_{}_{}'.format(lat, lon) for col in dfi.columns]            
-            df2 = df2.merge(dfi, how='left', right_index=True, left_index=True)
-            del dfi
-        df = df.merge(df2.drop(['tide_wtrend', 'gesla_swl','residual'], axis = 1), how='left', right_index=True, left_index=True)
-    df.drop(['tide_wtrend', 'gesla_swl'], axis=1, inplace=True)
-    return df, lat_list, lon_list
 # %%
-df = pd.DataFrame()
-df.get()

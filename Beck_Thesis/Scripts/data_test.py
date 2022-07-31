@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
-import os
 import sys
+import os
+sys.path.append(os.path.join(sys.path[0], r'./Scripts/'))
 
-# os.chdir('./Beck_Thesis/')
-from Scripts.model_run_coast import ensemble, set_logger
-
-# parameters and variables
-coast = sys.argv[1]
-ML = sys.argv[2]
-loss = sys.argv[3]
+from Scripts import to_learning as tl, model_run_coast as mrc
 
 resample = 'hourly' # 'hourly' 'daily'
 resample_method = 'rolling_mean'  # 'max' 'res_max' 'rolling_mean' ## res_max for daily and rolling_mean for hourly
@@ -39,18 +33,9 @@ frac_ens = 0.5
 loop = 2
 gamma = 1.2
 
-logger, ch = set_logger(loop, n_ncells)
+logger, ch = mrc.set_logger(loop, n_ncells)
 
-note = '5b5_gam1.2'
+ML = 'ANN'
 
-print(f'\nRUNNING {ML} FOR {coast} WITH {loss}\n')
-print('************************************************************************************************************************')
-
-ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_method, scaler,
-             batch, n_layers, neurons, filters, dropout, drop_value, activation, optimizer,
-             batch_normalization, loss, epochs, loop, n_ncells, l1, l2, frac_ens, logger, verbose = 0, validation = 'select', gamma=gamma, note=note)
-
-
-
-# write a function that runs the ensemble and saves the results in a file
-
+for coast in ['NE_Atlantic_2', "NE_Pacific"]:
+    stations = tl.get_all_station_data(coast, variables, ML, input_dir, resample, resample_method, batch, scaler, year, n_ncells, -999, tt_value, frac_ens, 0, logger, model_dir)
