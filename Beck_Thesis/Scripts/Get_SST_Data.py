@@ -1,5 +1,6 @@
 '''
 Script to get Sea surface temperature for desired stations. Functions had to be broken up to be run on different computers because of GEE authentification
+Basic work flow is : 1. get_date_ranges.py on Snellius 2. Transfer results to local machine 3. Get_SST_Data.py on local machine 4. Transfer SST data to Snellius 5. merge_sst_data.py on Snellius
 '''
 import ee
 import xarray as xr
@@ -81,8 +82,8 @@ def add_sst_to_ds(station_name, longitude, latitude):
 def get_sst_data(station):
 
     station_sst = (sst.filter(ee.Filter.date(station['start_date'], station['end_date']))
-                .getRegion(ee.Geometry.Point(station['Lon'], station['Lat']), 30)
-                .getInfo())
+                   .getRegion(ee.Geometry.Point(station['Lon'], station['Lat']), 30)
+                   .getInfo())
     
     # Convert to a pandas dataframe and convert to celsius
     sst_df = ee_array_to_df(station_sst, ['sea_surface_temperature'])
@@ -102,6 +103,8 @@ def get_sst_data(station):
     print('Writing')
     sst_ds.to_netcdf('Input_sst_data/' + station['Station'] + '_sst.nc') # Write to a new file
 
+
+# Load in the SST data
 sst = (ee.ImageCollection('NOAA/CDR/SST_PATHFINDER/V53')
             .select('sea_surface_temperature'))
 
@@ -115,12 +118,9 @@ sst = (ee.ImageCollection('NOAA/CDR/SST_PATHFINDER/V53')
 stations2 = pd.read_csv('Coast_orientation/Selected_Stations_dates.csv').dropna().reset_index(drop=True)
 stations2['start_date'] = pd.to_datetime(stations2['start_date'])
 stations2['end_date'] = pd.to_datetime(stations2['end_date'])
-# stations2 = stations2[stations2['Coast'] == 'NE_Atlantic_Yellow']
 
 for index, station in stations2.iterrows():
     print(f'\nGetting SST for Station: {station["Station"]}')
-    # if index == 0:
-    #     stat = station
     get_sst_data(station)
 
 

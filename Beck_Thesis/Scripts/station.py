@@ -1,3 +1,7 @@
+'''
+This class stores all the information (e.g., train/test data & metrics) for a given station
+'''
+
 import pandas as pd
 import numpy as np
 from sklearn.metrics import mean_squared_error as mse
@@ -6,10 +10,12 @@ import performance
 import os
 import keras
 import sys
+import json
+import copy
 
 class Station():
     
-    def __init__(self, station_name, train_test, train_X, train_Y, test_X, test_Y, val_X, val_Y, scaler, df, reframed_df, n_train_final, test_dates, test_year, model_dir, ML):
+    def __init__(self, station_name, train_test, train_X, train_Y, test_X, test_Y, val_X, val_Y, scaler, df, reframed_df, n_train_final, test_dates, test_year, model_dir, ML, loss):
         self.train_X = train_X
         self.name = station_name
         self.train_y = train_Y
@@ -24,6 +30,7 @@ class Station():
         self.test_dates = test_dates
         self.test_year = test_year
         self.train_test = train_test
+        self.loss = loss
         
         
         
@@ -42,11 +49,14 @@ class Station():
         
         
         # Store data and remove from memory
+        self.model_dir = model_dir
         self.data_path = os.path.join(model_dir, 'Data_storage', self.name, ML)
         os.makedirs(self.data_path, exist_ok=True)
         self.store_and_delete_data(store=True)
     
     def store_and_delete_data(self, store=False):
+        """Store the data for the station and remove it from memory to save space
+        """
         if store:
             with open(f'{self.data_path}/data.npy', 'wb') as f:
                 np.save(f, self.train_X)
@@ -57,25 +67,11 @@ class Station():
                 np.save(f, self.val_y)
                 np.save(f, self.reframed_df)
                 np.save(f, self.test_year)
-                
-            # np.savetxt(f'{self.data_path}/{self.name}_train_X.csv', self.train_X, delimiter=',')
-            # np.savetxt(f'{self.data_path}/{self.name}_train_y.csv', self.train_y, delimiter=',')
-            # np.savetxt(f'{self.data_path}/{self.name}_test_X.csv', self.test_X, delimiter=',')
-            # np.savetxt(f'{self.data_path}/{self.name}_test_y.csv', self.test_y, delimiter=',')
-            # np.savetxt(f'{self.data_path}/{self.name}_val_X.csv', self.val_X, delimiter=',')
-            # np.savetxt(f'{self.data_path}/{self.name}_val_y.csv', self.val_y, delimiter=',')
-            
-            # pd.DataFrame(self.train_X).to_csv(f'{self.data_path}/{self.name}_train_X.csv', index=False, header=False)
-            # pd.DataFrame(self.train_y).to_csv(f'{self.data_path}/{self.name}_train_y.csv', index=False, header=False)
-            # pd.DataFrame(self.test_X).to_csv(f'{self.data_path}/{self.name}_test_X.csv', index=False, header=False)
-            # pd.DataFrame(self.test_y).to_csv(f'{self.data_path}/{self.name}_test_y.csv', index=False, header=False)
-            # pd.DataFrame(self.val_X).to_csv(f'{self.data_path}/{self.name}_val_X.csv', index=False, header=False)
-            # pd.DataFrame(self.val_y).to_csv(f'{self.data_path}/{self.name}_val_y.csv', index=False, header=False)
             
             pd.DataFrame(self.reframed_df).to_csv(f'{self.data_path}/{self.name}_reframed_df.csv')
             pd.DataFrame(self.test_year).to_csv(f'{self.data_path}/{self.name}_test_year.csv')
             
-        # Delete unneeded variables
+        # Delete variables
         del self.train_X
         del self.train_y
         del self.test_X
@@ -86,7 +82,6 @@ class Station():
         del self.test_year
     
     def reload_data(self):
-        
         with open(f'{self.data_path}/data.npy', 'rb') as f:
             self.train_X = np.load(f)
             self.train_y = np.load(f)
@@ -96,13 +91,6 @@ class Station():
             self.val_y = np.load(f)
             self.reframed_df = np.load(f)
             self.test_year = np.load(f)
-        
-        # self.train_X = pd.read_csv(f'{self.data_path}/{self.name}_train_X.csv', header=None).to_numpy()
-        # self.train_y = pd.read_csv(f'{self.data_path}/{self.name}_train_y.csv', header=None).to_numpy()
-        # self.test_X = pd.read_csv(f'{self.data_path}/{self.name}_test_X.csv', header=None).to_numpy()
-        # self.test_y = pd.read_csv(f'{self.data_path}/{self.name}_test_y.csv', header=None).to_numpy()
-        # self.val_X = pd.read_csv(f'{self.data_path}/{self.name}_val_X.csv', header=None).to_numpy()
-        # self.val_y = pd.read_csv(f'{self.data_path}/{self.name}_val_y.csv', header=None).to_numpy()
         
         self.reframed_df = pd.read_csv(f'{self.data_path}/{self.name}_reframed_df.csv', index_col=0)
         self.test_year = pd.read_csv(f'{self.data_path}/{self.name}_test_year.csv', index_col=0)
@@ -175,4 +163,13 @@ class Station():
         self.result_all['fbeta_ext'][ensemble_loop] = self.fbeta_ext
         
         self.result_all['data'][ensemble_loop] = df_all.copy()
+        
+        # Save dictionary result_all to a json file
+        # with open(f'{self.model_dir}/Data/{self.name}_{self.loss}_result_all.json', 'w') as fp:
+        #     res = copy.deepcopy(self.result_all)
+        #     res.pop('data') # Remove the data from the dictionary
+        #     json.dump(res, fp)
+        
+        
+        
     

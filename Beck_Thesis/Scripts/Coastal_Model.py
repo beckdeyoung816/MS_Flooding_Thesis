@@ -85,7 +85,7 @@ class Coastal_Model():
 
         model = models.Sequential()
         model.add(layers.Dense(self.neurons, kernel_regularizer=keras.regularizers.l1_l2(l1=self.l1, l2=self.l2), activation=self.activ, input_dim=self.input_dim))
-        for i in range(self.n_layers - 1):
+        for i in range(self.n_layers):
             model.add(layers.Dense(self.neurons, kernel_regularizer=keras.regularizers.l1_l2(l1=self.l1, l2=self.l2), activation=self.activ))
             
         if self.drop_out:
@@ -126,14 +126,9 @@ class Coastal_Model():
         input_shape = (1, self.input_dim)
         
         model = models.Sequential()
-        for i in range(self.n_layers-lstm):
-            rs = i < self.n_layers-1 or lstm # Only return sequences if another TCN layer is coming and no LSTM layer is added
-            if i == 0: # Specify the input shape for the first layer
-                model.add(tcn.TCN(self.neurons, input_shape=input_shape, activation='relu', return_sequences=rs,
-                    dilations=(1,2,4,8), dropout_rate=self.drop_value, kernel_size=5, name='tcn_input'))
-            else:
-                model.add(tcn.TCN(self.neurons, activation='relu', return_sequences=rs,
-                    dilations=(1,2,4,8), dropout_rate=self.drop_value, kernel_size=5, name=f'tcn_{i}'))
+        # dilations = tuple([2**i for i in range(self.n_layers)])
+        model.add(tcn.TCN(self.neurons, input_shape=input_shape, activation='relu', return_sequences=lstm,
+            dilations=(1,2,4,8,16), dropout_rate=self.drop_value, kernel_size=5, name='tcn'))
         if lstm:
             model.add(layers.LSTM(self.neurons, activation=self.activ, return_sequences=False))
                 
@@ -169,7 +164,7 @@ class Coastal_Model():
         """Compile model using desired loss function and optimized
         """
         self.model.compile(loss=self.custom_loss_fn, optimizer=self.optimizer)
-        self.model.summary()
+        #self.model.summary()
         
     
     def gumbel_loss_hyper(self, gamma=1.1):
@@ -224,7 +219,7 @@ class Coastal_Model():
         train_stations = [station for station in self.station_inputs.values() if station.train_test == 'Train']
         num_stations = len(train_stations)
         for j, station in enumerate(train_stations):
-            print(f'\nTraining Station ({j+1} of {num_stations}): {station.name}\n')
+           # print(f'\nTraining Station ({j+1} of {num_stations}): {station.name}\n')
             
             station.reload_data()
             # fit network
@@ -250,58 +245,5 @@ class Coastal_Model():
         """
 
         for station in self.station_inputs.values():
-            print(f'\nPredicting station: {station.name}\n')
+            #print(f'\nPredicting station: {station.name}\n')
             station.predict(self.model, ensemble_loop, self.mask_val)
-
-    def hyper_opt(self):
-        # setup sherpa object
-        if self.ML == 'LSTM':
-            parameters = [sherpa.Ordinal(name='neurons', range=[24, 48, 96, 192]),
-                        sherpa.Ordinal(name='hidden', range=[1, 2, 3, 4, 5])]
-        elif self.ML == 'CNN':
-            parameters = [sherpa.Ordinal(name='filters', range=[8, 16, 24]),
-                        sherpa.Ordinal(name='neurons', range=[24, 48, 96, 192]),
-                        sherpa.Ordinal(name='hidden', range=[1, 2, 3, 4, 5])]
-            
-        # if self.loss_fn == 'gumbel':
-        #     parameters.append(sherpa.Ordinal(name='gamma', range=[0.1, 0.5, 1, 2, 5, 10]))
-        # elif self.loss_fn == 'frechet':
-        #     parameters.append(sherpa.Ordinal(name='alpha', range=[0.1, 0.5, 1, 2, 5, 10]))
-        #     parameters.append(sherpa.Ordinal(name='s', range=[0.1, 0.5, 1, 2, 5, 10]))
-
-        alg = sherpa.algorithms.RandomSearch(max_num_trials=100)
-        study = sherpa.Study(parameters=parameters, algorithm=alg, lower_is_better=True, disable_dashboard=True)
-
-        count = 1
-        for trial in study:
-            self.neurons = trial.parameters['neurons']
-            if self.ML == 'CNN' or self.ML == 'ConvLSTM':
-                self.filters = trial.parameters['filters']
-            self.n_layers = trial.parameters['hidden']
-            # drop_value = trial.parameters['dropout']
-            # l2 = trial.parameters['l2']
-            # batch = trial.parameters['batch']
-            self.batch_size = 10 * 24
-
-            self.design_network()
-            self.compile()
-            # fit network
-            self.train_model(hyper_opt=study.keras_callback(trial, objective_name='val_loss'))
-
-            study.finalize(trial)
-            if self.logger:
-                self.logger.info(f'Trial {self.ML}: {count}')
-            else:
-                print(f'\nTrial {self.ML}: {count}\n')
-            count += 1
-        if self.logger:
-            self.logger.info(study.get_best_result())
-        else:
-            print(study.get_best_result())
-        study.save(self.sherpa_output)
-        # sherpa.Study.load_dashboard(".")
-        # ssh -L 8000:localhost:8880 timothyt@cartesius.surfsara.nl
-        
-
-
-

@@ -18,8 +18,7 @@ from matplotlib import ticker
 import pandas as pd
 import os
 import seaborn as sns
-from sklearn.metrics import mean_squared_error
-from sklearn.metrics import r2_score,  mean_absolute_error
+from sklearn.metrics import mean_squared_error, r2_score,  mean_absolute_error
 from sklearn.metrics import precision_score, recall_score, fbeta_score
 import properscoring as ps
 # from ranky import rankz
@@ -35,7 +34,9 @@ weeks = mdates.WeekdayLocator()  # every month
 days = mdates.DayLocator()
 
 def get_coastline_results(stations):
-    results = {}
+    # results = {}
+    results = pd.DataFrame()
+    results['Train_test'] = [station.train_test for station in stations]
     results['RMSE'] = np.array([station.rmse for station in stations])
     results['Rel_RMSE'] = np.array([station.rel_rmse for station in stations])
     results['NSE'] = np.array([station.NSE for station in stations])
@@ -48,17 +49,30 @@ def get_coastline_results(stations):
     results['Recall'] = np.array([station.recall for station in stations])
     results['F_beta'] = np.array([station.fbeta_ext for station in stations])
     
-    results_df = pd.DataFrame(index = ['RMSE', 'Rel_RMSE', 'NSE', 'R2', 'MAE', 'RMSE\nExtremes', 'Rel RMSE\nExtremes', 'Precision', 'Recall', 'F_beta'], 
+    results_df_table = pd.DataFrame(index = ['RMSE', 'Rel_RMSE', 'NSE', 'R2', 'MAE', 'RMSE\nExtremes', 'Rel RMSE\nExtremes', 'Precision', 'Recall', 'F_beta'], 
                            columns = ['Min', 'Max', 'Mean', 'Median'])
     
-    for metric in results.keys():
-        results_df.loc[metric, 'Min'] = np.min(results[metric])
-        results_df.loc[metric, 'Max'] = np.max(results[metric])
-        results_df.loc[metric, 'Mean'] = np.mean(results[metric])
-        results_df.loc[metric, 'Median'] = np.median(results[metric])
+    for metric in results_df_table.index:
+        results_df_table.loc[metric, 'Min'] = np.min(results[metric])
+        results_df_table.loc[metric, 'Max'] = np.max(results[metric])
+        results_df_table.loc[metric, 'Mean'] = np.mean(results[metric])
+        results_df_table.loc[metric, 'Median'] = np.median(results[metric])
     
-    return results_df
+    return results_df_table, results
 
+def plot_coastline_results(train_results, test_results, out_dir, ML, coast, loss):
+        results = pd.concat([train_results, test_results], axis=0)
+        results = results.melt(id_vars=['Train_test'], value_vars=['Precision', 'Recall', 'F_beta'], var_name='Metric', value_name='Value')
+        sns.boxplot(data = results, x='Train_test', y='Value', hue='Metric')
+        plt.xlabel('')
+        plt.ylabel('')
+        plt.title(f'{coast}-{ML}-{loss}', fontsize=16)
+        plt.xticks(fontsize=12)
+        plt.yticks(fontsize=12)
+        plt.legend(fontsize=16)
+        plt.savefig(os.path.join(os.path.split(out_dir)[0], ML, 'Figures', f'{coast}_{ML}_{loss}_metrics_boxplot.png'), dpi=100)
+        plt.close()
+    
 #**************************************** COASTAL FUNCTIONS ****************************************
 def get_ens_class_metrics(station, df_test):
     filter_col = [col for col in df_test if col.startswith('Modelled')]
@@ -70,7 +84,7 @@ def get_ens_class_metrics(station, df_test):
     corrcoef = np.corrcoef(obs, preds)**2
     
     # Calculating RMSE
-    rel_rmse = rmse/np.mean(obs)
+    rel_rmse = abs(rmse/np.mean(obs))
     
     # Calculating RMSE for Extremes    
     extremes = (pd.DataFrame(obs)
@@ -83,7 +97,7 @@ def get_ens_class_metrics(station, df_test):
     pred_ext = preds[extremes_indices]
 
     rmse_ext = np.sqrt(mean_squared_error(obs_ext, pred_ext))
-    rel_rmse_ext = rmse_ext / obs.mean()
+    rel_rmse_ext = abs(rmse_ext / obs.mean())
     
     # Precision and recall and f1 score for extremes
     
@@ -231,7 +245,7 @@ def plot_ensemble_performance(station, df, train_loss, test_loss, station_name, 
         plot_ensemble_loss(train_loss, test_loss, fig.add_subplot(gs[4:6, 4:]))
     plot_ens_metrics(station, df.dropna(axis=0, how='any'), fig.add_subplot(gs[6:, 1:5]))
 
-    fig.suptitle(station_name, fontsize=32)
+    fig.suptitle(f'{station_name}-{station.train_test}', fontsize=32)
     plt.tight_layout(rect=[0, 0, 1, 0.95]) # [left, bottom, right, top]
     
     
@@ -311,6 +325,8 @@ def plot_ensemble_testing_max_ts(df_result, ax, resample):
     else:
         start_date = max_time - pd.offsets.Day(4)
         end_date = max_time + pd.offsets.Day(4)
+        myFmt = mdates.DateFormatter('%m-%d')
+        ax.xaxis.set_major_formatter(myFmt)
         ax.xaxis.set_major_locator(days)
 
     ax.set_xlim([start_date, end_date])

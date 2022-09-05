@@ -23,7 +23,7 @@ for coast in "${!coasts[@]}"; do
                 kill -0 "$pid" &>/dev/null || unset "pids[$pid]"
             done
         done
-        python -W ignore ML_env_Coast.py ${coasts[$coast]} ['ANN', 'LSTM'] ${losses[$loss]} & pids["$!"]=1
+        python -W ignore ML_env_Coast.py ${coasts[$coast]} 'ALL' ${losses[$loss]} & pids["$!"]=1
 done
 done
 wait

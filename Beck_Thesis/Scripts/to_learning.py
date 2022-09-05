@@ -546,10 +546,12 @@ def splitting_learning(reframed, df, tt_value, ML, variables, direction, lat_lis
     return train_X, train_y, test_X, test_y, n_train
 
 
+# ******************** BECK FUNCTIONS *************************
+
 
 def get_input_data(station, train_test, variables, ML, input_dir, resample, resample_method, batch,
                    scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold,
-                   logger, model_dir):
+                   logger, model_dir, loss):
     """Get the input data for a given station and preprocess it. This includes generating a training, test, and validation set. 
 
     Args:
@@ -590,7 +592,7 @@ def get_input_data(station, train_test, variables, ML, input_dir, resample, resa
     train_X, train_y, val_X, val_y, n_train = splitting_learning(reframed_draw, df, tt_value, ML, variables, direction, lat_list, lon_list, batch, n_train=n_train)
     
 
-    return Station(station, train_test, train_X, train_y, test_X, test_y, val_X, val_y, scaler, df, reframed, 0, i_test_dates, test_year, model_dir, ML)
+    return Station(station, train_test, train_X, train_y, test_X, test_y, val_X, val_y, scaler, df, reframed, 0, i_test_dates, test_year, model_dir, ML, loss)
 
 
 def get_coast_stations(coast):
@@ -613,7 +615,7 @@ def get_coast_stations(coast):
     return train_stations, test_stations
 
 
-def get_all_station_data(coast, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger, model_dir):
+def get_all_station_data(coast, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger, model_dir, loss):
         # Get input data for each station
         stations = {}
         train_stations, test_stations = get_coast_stations(coast)
@@ -623,13 +625,15 @@ def get_all_station_data(coast, variables, ML, input_dir, resample, resample_met
             # This includes the train, test, and validation data, as well as the scaler and transformed data for inverse transforming
             try:
                 train_test = 'Train' if station in train_stations else 'Test'
-                stations[station] = get_input_data(station, train_test, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger, model_dir)
+                stations[station] = get_input_data(station, train_test, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger, model_dir, loss)
             except:
                 print('Not enough data for station station: ', station)
                 
         return stations
 
 def normalize_coast_orientation(ds, direction, variables, n_ncells):
+    """Normalize the coastline orientation to 'face' North. Creates a matrix with consistent ordering of variables based on their relative locations to the coast. 
+    """
     
     # Identify desired lats and lons
     middle = int(len(ds.longitude)/2)

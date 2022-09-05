@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+'''
+Parameter setting for the models.
+'''
 import os
 import sys
 
@@ -41,7 +44,7 @@ gamma = 1.2
 
 logger, ch = set_logger(loop, n_ncells)
 
-note = '5b5_gam1.2'
+note = f'5b5_gam{gamma}'
 
 print(f'\nRUNNING {ML} FOR {coast} WITH {loss}\n')
 print('************************************************************************************************************************')
@@ -50,7 +53,4 @@ ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_method, s
              batch, n_layers, neurons, filters, dropout, drop_value, activation, optimizer,
              batch_normalization, loss, epochs, loop, n_ncells, l1, l2, frac_ens, logger, verbose = 0, validation = 'select', gamma=gamma, note=note)
 
-
-
-# write a function that runs the ensemble and saves the results in a file
 

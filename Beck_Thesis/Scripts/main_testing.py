@@ -1,21 +1,22 @@
 # %%
+import numpy as np
+import pandas as pd
 
 # %%
 import logging
 import logging.handlers
 import os
 import sys
-from matplotlib import ticker
 import numpy as np
 import pandas as pd
 import keras
 import tensorflow as tf
 import time
-import datetime
-import xarray as xr
+# import datetime
+# import xarray as xr
 from keras import utils, layers
 from keras.models import Sequential
-import tensorflow_probability as tfp
+# import tensorflow_probability as tfp
 # import darts
 # from darts.models import TCNModel
 # from darts import datasets as ds
@@ -485,17 +486,45 @@ np.sqrt(mse(res['Obs'], res['Pred']))
 np.sqrt(mse(res['Obs'][res['Obs_Ext']], res['Pred'][res['Obs_Ext']]))
 np.sqrt(mse(res['Obs'][not res['Obs_Ext']], res['Pred'][not res['Obs_Ext']]))
 # %%
+from scipy.stats import norm, gumbel_r, gumbel_l
 data = np.linspace(-2, 2, 100)
 
 def gumbel_kde(u, gamma):
     return np.exp((-(1-np.exp(-u**2)) ** gamma) * (u **2))
 Z = 1
-plt.plot(Z*gumbel_kde(data, gamma=1), label = 'Gamma = 1' )
-plt.plot(Z*gumbel_kde(data, gamma=1.1), label = 'Gamma = 1.1' )
-plt.plot(Z*gumbel_kde(data, gamma=1.5), label = 'Gamma = 1.5' )
-plt.plot(Z*gumbel_kde(data, gamma=2), label = 'Gamma = 2' )
+# plt.plot(data, Z*gumbel_kde(data, gamma=1), label = 'Gamma = 1' )
+# plt.plot(data, Z*gumbel_kde(data, gamma=1.1), label = 'Gamma = 1.1' )
+# plt.plot(data, Z*gumbel_kde(data, gamma=1.5), label = 'Gamma = 1.5' )
+# plt.plot(data, Z*gumbel_kde(data, gamma=2), label = 'Gamma = 2' )
+# plt.plot(data, Z*gumbel_kde(data, gamma=10), label = 'Gamma = 10' )
+# Plot a normal distribution for comparison
+plt.plot(data, gumbel_r.pdf(data), label = 'Gumbel' )
+plt.plot(data, norm.pdf(data), label = 'Normal' )
 plt.legend()
 
+plt.show()
+
+# %%
+from scipy.stats import norm, gumbel_r, gumbel_l
+gum_r = np.linspace(gumbel_r.ppf(0.0000001),
+                gumbel_r.ppf(0.999), 1000)
+
+gum_l = np.linspace(gumbel_l.ppf(0.0000000000001),
+                    gumbel_l.ppf(0.99), 1000)
+
+norm_data = np.linspace(norm.ppf(0.000001),
+                        norm.ppf(.99999999999999), 1000)
+
+# rv = gumbel_r()
+
+plt.plot(gum_r, gumbel_r.pdf(gum_r, scale=1.5), label='Gumbel Right Skewed: 1.5')
+plt.plot(gum_r, gumbel_r.pdf(gum_r, scale=1.1), label='Gumbel Right Skewed: 1.1')
+plt.plot(gum_r, gumbel_r.pdf(gum_r, scale=10), label='Gumbel Right Skewed: 10')
+# plt.plot(gum_l, gumbel_l.pdf(gum_l), label='Gumbel Left Skewed')
+plt.plot(norm_data, norm.pdf(norm_data), label = 'Normal')
+plt.title('Gumbel and Normal Distribution')
+plt.legend()
+# plt.savefig('gumbel_normal.png', facecolor='w')
 plt.show()
 
 # %%
@@ -833,4 +862,24 @@ df.dropna(inplace=True)
 
 df = df2.dropna()
 
+# %%
+results = pd.DataFrame()
+results['Precision'] = np.random.normal(size=10)
+results['Recall'] = np.random.normal(size=10)
+results['F1'] = np.random.normal(size=10)
+results['Train_test'] = ['Train'] * 5 + ['Test'] * 5
+
+# %%
+# Reshape the results dataframe to have precision, recall, and f1 stored in the same column
+results2 = results.melt(id_vars=['Train_test'], value_vars=['Precision', 'Recall', 'F1'], var_name='Metric', value_name='Value')
+
+# %%
+results.boxplot(by='Train_test')
+# %%
+import seaborn as sns
+sns.boxplot(x='Train_test', y='Value', data=results2, hue='Metric')
+plt.xlabel('')
+plt.ylabel('')
+
+    
 # %%

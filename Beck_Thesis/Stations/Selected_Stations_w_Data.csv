@@ -53,3 +53,12 @@ NE_Pacific_Green,NE_Pacific,1068,60,-149.43,seward-9455090-usa-noaa,United State
 NE_Pacific_Green,NE_Pacific,1089,57,-135.34,"sitka,ak-559a-usa-uhslc",United States,Alaska,-18,0,E,56.96,-135.0464232,TRUE,Train
 NE_Pacific_Green,NE_Pacific,1201,61,-146.36,"valdez,ak-562a-usa-uhslc",United States,Alaska,-162,0.000233249,W,60.42,-148.5276522,,
 NE_Pacific_Green,NE_Pacific,1260,60,-139.74,"yakutat,ak-570a-usa-uhslc",United States,Alaska,4,0,E,59.6,-139.0376517,TRUE,Test
+NE_Atlantic_Yellow,Cux_Test,114,48.38,-4.5,brest-brest-france-refmar,France,Bretagne,-1.43,0,E,48.35,-3.25,TRUE,Train
+NE_Atlantic_Yellow,Cux_Test,4,57.14,-2.07,aberdeen-p038-uk-bodc,United Kingdom,Scotland,179.81,0,W,57.15,-2.69,TRUE,Test
+NE_Atlantic_Yellow,Cux_Test,131,50.97,1.87,calais-calais-france-refmar,France,Nord-Pas-de-Calais,-62.97,0,S,50.63,2.04,TRUE,Train
+NE_Atlantic_Yellow,Cux_Test,415,51.98,4.12,hoekvanholla-hvh-nl-rws,Netherlands,Zuid-Holland,22.47,0,E,52.16,4.56,TRUE,Test
+NE_Atlantic_Yellow,Cux_Test,260,52.97,4.75,denhelder-hel-nl-rws,Netherlands,Noord-Holland,-72.53,0,S,52.55,4.88,TRUE,Train
+NE_Atlantic_Yellow,Cux_Test,259,53.33,6.93,delfzijl-del-nl-rws,Netherlands,Groningen,-149.95,0,W,53.22,6.74,TRUE,Test
+NE_Atlantic_Yellow,Cux_Test,296,55.47,8.43,esbjerg-130121-denmark-dmi,Denmark,Syddanmark,-12.79,0,E,55.36,8.91,TRUE,Train
+NE_Atlantic_Yellow,Cux_Test,234,53.87,8.72,cuxhaven-cuxhaven-germany-bsh,Germany,Niedersachsen,-84.57,0,S,53.57,8.74,TRUE,Test
+Cuxhaven,Cux_Station,234,53.87,8.72,cuxhaven-cuxhaven-germany-bsh,Germany,Niedersachsen,-84.57,0,S,53.57,8.74,TRUE,Train

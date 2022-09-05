@@ -1,16 +1,16 @@
+'''
+This scripts oversees the running of the ensemble models.
+'''
 import logging
 import logging.handlers
 import os
-from posixpath import dirname
 import sys
-import numpy as np
 import pandas as pd
 import keras
 import tensorflow as tf
 import time
-from datetime import date
-import xarray as xr
-import random as rand
+import json
+import copy
 
 import sys
 sys.path.append(os.path.join(sys.path[0], r'./Scripts/'))
@@ -83,7 +83,7 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
     else:
         ML_list = [ML]
         
-    print('ML_list is:', ML_list)
+    #print('ML_list is:', ML_list)
     
     if resample == 'hourly':                            
         batch = batch * 24
@@ -105,12 +105,11 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
 
         
         # Get input data for each station
-        stations = to_learning.get_all_station_data(coast, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger, model_dir)
+        stations = to_learning.get_all_station_data(coast, variables, ML, input_dir, resample, resample_method, batch, scaler_type, year, n_ncells, mask_val, tt_value, frac_ens, NaN_threshold, logger, model_dir, loss)
                                         
             
         for i in range(loop): # Loop is number of models in the ensemble
-            if not logger:
-                print(f'\nEnsemble loop: {i + 1}\n')
+            print(f'\nEnsemble loop: {i + 1}\n')
             tf.keras.backend.clear_session()
             name_model = f'{ML}_{loss}_ensemble_{i + 1}'
 
@@ -144,26 +143,29 @@ def ensemble(coast, variables, ML, tt_value, input_dir, resample, resample_metho
             
             # Get results for the entire coastline
             all_stations = model.station_inputs.values()
-            coast_train_results = performance.get_coastline_results([station for station in all_stations if station.train_test == 'Train'])
-            coast_test_results = performance.get_coastline_results([station for station in all_stations if station.train_test == 'Test'])
-            print(f'\nCoastline train results:\n {coast_train_results}')
-            print(f'\n\nCoastline test results:\n {coast_test_results}')
+            coast_train_results_table, train_results_data = performance.get_coastline_results([station for station in all_stations if station.train_test == 'Train'])
+            coast_test_results_table, test_results_data = performance.get_coastline_results([station for station in all_stations if station.train_test == 'Test'])
+            print(f'\nCoastline train results:\n {coast_train_results_table}')
+            print(f'\n\nCoastline test results:\n {coast_test_results_table}')
             
-            # Store coastline results
-            # os.makedirs(os.path.join(model_dir, 'Results'), exist_ok=True)
-            # coast_train_results.to_csv(os.path.join(model_dir, f'Results/train_coast_results_{ML}_{loss}.csv'))
-            # coast_test_results.to_csv(os.path.join(model_dir, f'Results/test_coast_results_{ML}_{loss}.csv'))
+            performance.plot_coastline_results(train_results_data, test_results_data, model_dir, ML, coast, loss)
+            
+            for station in all_stations:
+                with open(f'{model_dir}/Data/{station.name}_{ML}_{loss}_result_all.json', 'w') as fp:
+                    res = copy.deepcopy(station.result_all)
+                    res.pop('data') # Remove the data from the dictionary
+                    json.dump(res, fp, indent=4)
             
             
             res = os.path.join(fn_exp, 'Results')
             os.makedirs(res, exist_ok=True)
-            res_path = f'{res}/results-{coast}-{date.today().strftime("%m-%d")}-({note}).xlsx'
+            res_path = f'{res}/results-{coast}-({note}).xlsx'
             if not os.path.exists(res_path):
                 writer=pd.ExcelWriter(res_path, mode='w')
             else:
                 writer = pd.ExcelWriter(res_path, mode='a', if_sheet_exists='replace')
-            coast_test_results.to_excel(writer, sheet_name=f'{ML}_{loss}_test')
-            coast_train_results.to_excel(writer, sheet_name=f'{ML}_{loss}_train')
+            coast_test_results_table.to_excel(writer, sheet_name=f'{ML}_{loss}_test')
+            coast_train_results_table.to_excel(writer, sheet_name=f'{ML}_{loss}_train')
             writer.save()
             
         if logger:

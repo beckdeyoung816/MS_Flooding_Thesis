@@ -1,0 +1,79 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r  message=F, warning=F}
+library(tidyverse)
+library(readxl)
+library(glue)
+library(xtable)
+library(purrr)
+```
+
+
+```{r}
+setwd("~/My Drive/VU/Thesis/Scripts")
+```
+
+```{r}
+results <- read_excel("../Models/Results/results-NE_Atlantic_1-08-08-(5b5_gam1.1).xlsx") %>% column_to_rownames(var = "...1") %>% round(2)
+```
+
+```{r}
+print_coast_table <- function(coast, ML, train, loss, date){
+  
+  file <- glue("results-{coast}")
+  sheet <- glue("{ML}_{loss}_{train}")
+  capt <- glue('{ML} {loss} {train}')
+  tab <- glue("../Models/Results/results-NE_Atlantic_1-(5b5_gam1.1).xlsx") %>% 
+    read_excel(sheet = sheet) %>% column_to_rownames(var = "...1") %>% round(2)
+  
+  rownames(tab) <- c("RMSE", "RRMSE", "NSE", "R2", "MAE", "RMSE Ext", "RRMSE Ext", "Precision", "Recall", "F_beta")
+  
+  tab["RRMSE Ext", ] <- tab["RRMSE Ext", ] / 100
+  tab["RRMSE", ] <- tab["RRMSE", ] / 100
+  
+  row_names = train == "train"
+  #glue("{file} : {sheet}") %>% print()
+  xtable(x = tab, type= 'latex', caption = capt %>% as.character(), align='rcccc') %>%
+    print(include.rownames=row_names)
+  cat('\n\n\n')
+  
+}
+
+```
+
+```{r }
+
+coasts <- c("Northeast_Atlantic_1",
+            "Northeast_Atlantic_2",
+            "Northeast_Pacific",
+            "Japan")
+MLs <- c('ANN',
+        "LSTM",
+        "TCN",
+        "TCN-LSTM")
+
+losses <- c("mse", 
+            "Gumbel")
+trains <- c("train",
+            "test")
+```
+
+```{r warning=False, message=F}
+date <- "08-08"
+# pmap(list(coasts[1], MLs, losses[2], trains), print_coast_table, date)
+for (ML in MLs){
+  for (train in trains){
+    print_coast_table(coasts[1], ML, train, losses[1], date)
+  }
+  
+}
+
+print_coast_table(coasts[1], "LSTM", trains[2], losses[2], date)
+```
+
+```{r}
+
+```
+
